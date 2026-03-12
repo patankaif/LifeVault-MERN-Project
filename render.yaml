@@ -1,11 +1,11 @@
 services:
-  # Backend Service
+  # Backend Service (serves both API and frontend)
   - type: web
     name: lifevault-api
     env: node
     repo: https://github.com/patankaif/LifeVault.git
     rootDir: .
-    buildCommand: pnpm install && pnpm run build:backend
+    buildCommand: pnpm install && pnpm run build
     startCommand: pnpm start
     envVars:
       - key: NODE_ENV
@@ -54,20 +54,6 @@ services:
       - key: UPLOAD_DIR
         value: ./uploads
 
-  # Frontend Service
-  - type: web
-    name: lifevault-frontend
-    env: static
-    repo: https://github.com/patankaif/LifeVault.git
-    rootDir: client
-    buildCommand: npm install --legacy-peer-deps && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://lifevault-api.onrender.com
-      - key: VITE_ANALYTICS_ENDPOINT
-        value: https://lifevault-api.onrender.com
-      - key: VITE_ANALYTICS_WEBSITE_ID
-        value: prod
+  # No separate frontend service needed - backend serves both API and frontend
 
 # No database service needed - using external MongoDB
