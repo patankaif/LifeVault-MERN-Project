@@ -265,7 +265,7 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       }
       
       fs.writeFileSync(filePath, fileBuffer);
-      url = `/uploads/${fileName}`;
+      url = `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads/${fileName}`;
       
       console.log('File saved locally:', url);
     } catch (error) {
