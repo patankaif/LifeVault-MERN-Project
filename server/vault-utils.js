@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDB } from './db-mongo.js';
 import { sendScheduledSlotNotification, sendDeathVaultNotification, sendSlotDeliveryConfirmation } from './email-service.js';
+import { getCurrentISTTime, getCurrentISTISOString, getISTDateForDB } from './timezone-utils.js';
 
 const PRESENT_VAULT_LIMIT_DAYS = 30;
 const FUTURE_VAULT_LIMIT_DAYS = 270; // 9 months
@@ -44,8 +45,8 @@ export async function createSlot(userId, vaultId, slotName, parentSlotId = null)
       media: [],
       texts: [],
       scheduledEmails: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: getISTDateForDB(),
+      updatedAt: getISTDateForDB(),
     };
 
     await db.collection('slots').insertOne(slot);
@@ -85,12 +86,12 @@ export async function addMediaToSlot(slotId, mediaUrl, mediaType) {
       _id: uuidv4(),
       url: mediaUrl,
       type: mediaType, // 'image', 'video'
-      uploadedAt: new Date(),
+      uploadedAt: getISTDateForDB(),
     };
 
     await db.collection('slots').updateOne(
       { _id: slotId },
-      { $push: { media }, $set: { updatedAt: new Date() } }
+      { $push: { media }, $set: { updatedAt: getISTDateForDB() } }
     );
 
     return {
@@ -111,12 +112,12 @@ export async function addTextToSlot(slotId, textContent) {
     const text = {
       _id: uuidv4(),
       content: textContent,
-      createdAt: new Date(),
+      createdAt: getISTDateForDB(),
     };
 
     await db.collection('slots').updateOne(
       { _id: slotId },
-      { $push: { texts: text }, $set: { updatedAt: new Date() } }
+      { $push: { texts: text }, $set: { updatedAt: getISTDateForDB() } }
     );
 
     return {
@@ -232,11 +233,11 @@ export async function scheduleSlot(slotId, recipientEmail, scheduledDate, vaultT
       _id: uuidv4(),
       slotId,
       recipientEmail,
-      scheduledDate: new Date(scheduledDate),
+      scheduledDate: getISTDateForDB(new Date(scheduledDate)),
       accessToken: uuidv4(),
-      accessTokenExpiresAt: new Date(Date.now() + SHARE_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000),
+      accessTokenExpiresAt: getISTDateForDB(new Date(Date.now() + SHARE_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000)),
       sent: false,
-      createdAt: new Date(),
+      createdAt: getISTDateForDB(),
     };
 
     console.log(`[Vault] Creating scheduling record:`, JSON.stringify(scheduling, null, 2));
@@ -337,8 +338,8 @@ export async function getDeliveryStatus(slotId) {
 export async function sendScheduledSlots() {
   try {
     const db = await getDB();
-    const now = new Date();
-    console.log(`[Vault] Current server time: ${now.toISOString()}`);
+    const now = getCurrentISTTime();
+    console.log(`[Vault] Current IST time: ${getCurrentISTISOString()}`);
 
     // Find all scheduled slots that are due to be sent
     const dueSchedulings = await db.collection('scheduling')
