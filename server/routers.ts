@@ -1,7 +1,8 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { sendDeletionOTP, verifyAndDeleteAccount, checkDeletionOTPStatus } from "./account-deletion.js";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -14,6 +15,22 @@ export const appRouter = router({
       return {
         success: true,
       } as const;
+    }),
+  }),
+
+  account: router({
+    sendDeletionOTP: protectedProcedure.mutation(async ({ ctx }) => {
+      return await sendDeletionOTP(ctx.user.id);
+    }),
+    
+    verifyAndDelete: protectedProcedure
+      .input(otp => otp)
+      .mutation(async ({ ctx, input }) => {
+        return await verifyAndDeleteAccount(ctx.user.id, input);
+      }),
+      
+    checkDeletionStatus: protectedProcedure.query(async ({ ctx }) => {
+      return await checkDeletionOTPStatus(ctx.user.id);
     }),
   }),
 
