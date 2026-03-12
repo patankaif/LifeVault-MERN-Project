@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDB } from './db-mongo.js';
 import { sendScheduledSlotNotification, sendDeathVaultNotification, sendSlotDeliveryConfirmation } from './email-service.js';
-import { getCurrentISTTime, getCurrentISTISOString, getISTDateForDB } from './timezone-utils.js';
+import { getCurrentISTTime, getCurrentISTISOString, getISTDateForDB, convertISTToUTC } from './timezone-utils.js';
 
 const PRESENT_VAULT_LIMIT_DAYS = 30;
 const FUTURE_VAULT_LIMIT_DAYS = 270; // 9 months
@@ -233,7 +233,7 @@ export async function scheduleSlot(slotId, recipientEmail, scheduledDate, vaultT
       _id: uuidv4(),
       slotId,
       recipientEmail,
-      scheduledDate: getISTDateForDB(new Date(scheduledDate)),
+      scheduledDate: convertISTToUTC(scheduledDate),
       accessToken: uuidv4(),
       accessTokenExpiresAt: getISTDateForDB(new Date(Date.now() + SHARE_LINK_VALIDITY_DAYS * 24 * 60 * 60 * 1000)),
       sent: false,
@@ -256,7 +256,7 @@ export async function scheduleSlot(slotId, recipientEmail, scheduledDate, vaultT
       { 
         $push: { scheduledEmails: scheduling._id },
         $set: { 
-          scheduledDate: new Date(scheduledDate),
+          scheduledDate: convertISTToUTC(scheduledDate),
           scheduledEmail: recipientEmail,
           updatedAt: new Date()
         }
@@ -338,13 +338,16 @@ export async function getDeliveryStatus(slotId) {
 export async function sendScheduledSlots() {
   try {
     const db = await getDB();
-    const now = getCurrentISTTime();
+    const currentIST = getCurrentISTTime();
+    const currentUTC = new Date();
+    
+    console.log(`[Vault] Current UTC time: ${currentUTC.toISOString()}`);
     console.log(`[Vault] Current IST time: ${getCurrentISTISOString()}`);
 
-    // Find all scheduled slots that are due to be sent
+    // Find all scheduled slots that are due to be sent (compare UTC times)
     const dueSchedulings = await db.collection('scheduling')
       .find({
-        scheduledDate: { $lte: now },
+        scheduledDate: { $lte: currentUTC },
         sent: false,
       })
       .toArray();
