@@ -243,8 +243,12 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
   try {
     const { slotId } = req.params;
     const { file, mediaType } = req.body;
+    const userId = req.user.userId;
+
+    console.log(`[Upload] User: ${userId}, Slot: ${slotId}, Type: ${mediaType}, File size: ${file?.length}`);
 
     if (!file || !mediaType) {
+      console.log('[Upload] Missing file or mediaType');
       return res.status(400).json({ success: false, message: 'File and media type are required' });
     }
 
@@ -262,6 +266,7 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       // Ensure uploads directory exists
       if (!fs.existsSync(path.join(process.cwd(), 'uploads'))) {
         fs.mkdirSync(path.join(process.cwd(), 'uploads'), { recursive: true });
+        console.log('[Upload] Created uploads directory');
       }
       
       fs.writeFileSync(filePath, fileBuffer);
@@ -276,15 +281,17 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
         return res.status(500).json({ success: false, message: 'Failed to save file' });
       }
     } catch (error) {
-      console.error('File upload failed:', error);
+      console.error('[Upload] File upload failed:', error);
       return res.status(500).json({ success: false, message: 'Failed to save file' });
     }
 
     // Add to slot
+    console.log(`[Upload] Adding media to slot ${slotId}`);
     const result = await vaultUtils.addMediaToSlot(slotId, url, mediaType);
+    console.log(`[Upload] Result:`, result);
     return res.json(result);
   } catch (error) {
-    console.error('Media upload error:', error);
+    console.error('[Upload] Media upload error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Upload failed' });
   }
 });
