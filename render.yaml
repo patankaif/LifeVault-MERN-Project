@@ -4,9 +4,9 @@ services:
     name: lifevault-api
     env: node
     repo: https://github.com/patankaif/LifeVault.git
-    rootDir: backend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    rootDir: .
+    buildCommand: pnpm install && pnpm run build:backend
+    startCommand: pnpm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,7 +20,7 @@ services:
       - key: FROM_NAME
         value: LifeVault
       # Database
-      - key: DATABASE_URL
+      - key: MONGODB_URI
         sync: false
       # JWT & Auth
       - key: JWT_SECRET
@@ -43,6 +43,11 @@ services:
       # URLs
       - key: FRONTEND_URL
         value: https://lifevault-frontend.onrender.com
+      # Analytics
+      - key: VITE_ANALYTICS_ENDPOINT
+        value: https://lifevault-api.onrender.com
+      - key: VITE_ANALYTICS_WEBSITE_ID
+        value: prod
       # File Upload
       - key: MAX_FILE_SIZE
         value: 10485760
@@ -54,16 +59,15 @@ services:
     name: lifevault-frontend
     env: static
     repo: https://github.com/patankaif/LifeVault.git
-    rootDir: frontend
-    buildCommand: npm install && npm run build
+    rootDir: client
+    buildCommand: pnpm install && pnpm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         value: https://lifevault-api.onrender.com
+      - key: VITE_ANALYTICS_ENDPOINT
+        value: https://lifevault-api.onrender.com
+      - key: VITE_ANALYTICS_WEBSITE_ID
+        value: prod
 
-databases:
-  # PostgreSQL Database
-  - name: lifevault-db
-    databaseName: lifevault
-    user: lifevault
-    plan: free
+# No database service needed - using external MongoDB
