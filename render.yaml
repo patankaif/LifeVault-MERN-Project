@@ -60,7 +60,7 @@ services:
     env: static
     repo: https://github.com/patankaif/LifeVault.git
     rootDir: client
-    buildCommand: pnpm install && pnpm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
