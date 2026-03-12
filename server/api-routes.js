@@ -265,9 +265,16 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       }
       
       fs.writeFileSync(filePath, fileBuffer);
-      url = `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads/${fileName}`;
       
-      console.log('File saved locally:', url);
+      // Verify file was written
+      if (fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath);
+        console.log(`✅ File saved successfully: ${fileName} (${stats.size} bytes)`);
+        url = `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads/${fileName}`;
+      } else {
+        console.error('❌ File save failed!');
+        return res.status(500).json({ success: false, message: 'Failed to save file' });
+      }
     } catch (error) {
       console.error('File upload failed:', error);
       return res.status(500).json({ success: false, message: 'Failed to save file' });
