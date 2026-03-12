@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AccountDeletionDialog } from '@/components/account-deletion/AccountDeletionDialog';
-import { User, Mail, Calendar, Shield, Settings, Trash2 } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Settings, Trash2, AlertTriangle } from 'lucide-react';
 
 export function ProfileSection({ user }) {
   const [showDeletionDialog, setShowDeletionDialog] = useState(false);
