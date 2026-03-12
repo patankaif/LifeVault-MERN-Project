@@ -1,0 +1,69 @@
+services:
+  # Backend Service
+  - type: web
+    name: lifevault-api
+    env: node
+    repo: https://github.com/patankaif/LifeVault.git
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Email Service (Resend Production)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        value: noreply@lifevaults.me
+      - key: FROM_NAME
+        value: LifeVault
+      # Database
+      - key: DATABASE_URL
+        sync: false
+      # JWT & Auth
+      - key: JWT_SECRET
+        sync: false
+      # OAuth - Google
+      - key: OAUTH_GOOGLE_CLIENT_ID
+        sync: false
+      - key: OAUTH_GOOGLE_CLIENT_SECRET
+        sync: false
+      # OAuth - Facebook  
+      - key: OAUTH_FACEBOOK_CLIENT_ID
+        sync: false
+      - key: OAUTH_FACEBOOK_CLIENT_SECRET
+        sync: false
+      # Email Service
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      # URLs
+      - key: FRONTEND_URL
+        value: https://lifevault-frontend.onrender.com
+      # File Upload
+      - key: MAX_FILE_SIZE
+        value: 10485760
+      - key: UPLOAD_DIR
+        value: ./uploads
+
+  # Frontend Service
+  - type: web
+    name: lifevault-frontend
+    env: static
+    repo: https://github.com/patankaif/LifeVault.git
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://lifevault-api.onrender.com
+
+databases:
+  # PostgreSQL Database
+  - name: lifevault-db
+    databaseName: lifevault
+    user: lifevault
+    plan: free
