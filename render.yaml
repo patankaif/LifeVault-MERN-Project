@@ -57,11 +57,10 @@ services:
   # Frontend Service
   - type: web
     name: lifevault-frontend
-    env: node
+    env: static
     repo: https://github.com/patankaif/LifeVault.git
     rootDir: client
-    buildCommand: corepack enable pnpm && pnpm install --frozen-lockfile && pnpm run build
-    startCommand: echo "Static build complete"
+    buildCommand: npm install --legacy-peer-deps && npm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
