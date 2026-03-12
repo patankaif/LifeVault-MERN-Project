@@ -17,21 +17,32 @@ export default function SharedVault() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    console.log('SharedVault useEffect - match:', match, 'params:', params);
     if (params?.token) {
+      console.log('Token found, fetching shared slot...');
       fetchSharedSlot(params.token);
+    } else {
+      console.log('No token found in URL');
+      setLoading(false);
     }
   }, [params?.token]);
 
   const fetchSharedSlot = async (token) => {
     try {
+      console.log('Fetching shared slot with token:', token);
       const response = await fetch(`/api/shared-vault/${token}`);
+      console.log('Response status:', response.status);
+      
       const data = await response.json();
+      console.log('Response data:', data);
+      
       if (data.success) {
         setSlot(data.slot);
       } else {
         setError(data.message || 'Shared slot not found or link expired');
       }
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
