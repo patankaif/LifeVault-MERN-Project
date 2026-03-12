@@ -251,27 +251,26 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
     let url;
     
     try {
-      // Try to upload to S3 first
+      // Use local storage directly (more reliable for Render)
+      const fs = await import('fs');
+      const path = await import('path');
+      
       const fileBuffer = Buffer.from(file, 'base64');
-      const fileKey = `${req.user.userId}/slots/${slotId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const result = await storagePut(fileKey, fileBuffer, mediaType === 'image' ? 'image/jpeg' : 'video/mp4');
-      url = result.url;
-    } catch (storageError) {
-      // Fallback to local storage
-      console.warn('Storage upload failed, using local fallback:', storageError.message);
-      try {
-        const fs = await import('fs');
-        const path = await import('path');
-        
-        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
-        const filePath = path.join(process.cwd(), 'uploads', fileName);
-        
-        fs.writeFileSync(filePath, Buffer.from(file, 'base64'));
-        url = `/uploads/${fileName}`;
-      } catch (localError) {
-        console.error('Local storage failed:', localError);
-        return res.status(500).json({ success: false, message: 'Failed to save file locally' });
+      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
+      const filePath = path.join(process.cwd(), 'uploads', fileName);
+      
+      // Ensure uploads directory exists
+      if (!fs.existsSync(path.join(process.cwd(), 'uploads'))) {
+        fs.mkdirSync(path.join(process.cwd(), 'uploads'), { recursive: true });
       }
+      
+      fs.writeFileSync(filePath, fileBuffer);
+      url = `/uploads/${fileName}`;
+      
+      console.log('File saved locally:', url);
+    } catch (error) {
+      console.error('File upload failed:', error);
+      return res.status(500).json({ success: false, message: 'Failed to save file' });
     }
 
     // Add to slot

@@ -6,19 +6,12 @@ import { ENV } from './_core/env';
 type StorageConfig = { baseUrl: string; apiKey: string };
 
 function getStorageConfig(): StorageConfig {
-  const baseUrl = ENV.forgeApiUrl;
-  const apiKey = ENV.forgeApiKey;
-
-  // Fallback to local storage if forge credentials are missing
-  if (!baseUrl || !apiKey) {
-    console.warn('Storage proxy credentials missing, using local storage fallback');
-    return { 
-      baseUrl: 'http://localhost:3001/uploads', 
-      apiKey: 'local-fallback' 
-    };
-  }
-
-  return { baseUrl: baseUrl.replace(/\/+$/, ""), apiKey };
+  // Always use local storage fallback for Render deployment
+  console.log('Using local storage fallback for uploads');
+  return { 
+    baseUrl: `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads`, 
+    apiKey: 'local-fallback' 
+  };
 }
 
 function buildUploadUrl(baseUrl: string, relKey: string): URL {

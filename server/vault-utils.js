@@ -372,7 +372,7 @@ export async function sendScheduledSlots() {
       }
 
       // Create access link
-      const accessLink = `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/shared-vault/${scheduling.accessToken}`;
+      const accessLink = `https://lifevault-api-cmmw.onrender.com/shared-vault/${scheduling.accessToken}`;
 
       console.log(`[Vault] Sending email to ${scheduling.recipientEmail} for slot "${slot.name}"`);
       
