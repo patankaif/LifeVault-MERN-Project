@@ -102,7 +102,7 @@ async function startServer() {
   if (!process.env.FRONTEND_URL) {
     process.env.FRONTEND_URL = process.env.NODE_ENV === "development" 
       ? `http://localhost:3005` 
-      : `https://${process.env.VITE_APP_ID}.manus.space`;
+      : `https://lifevault-api-cmmw.onrender.com`;
   }
 
   console.log(`[Server] FRONTEND_URL set to: ${process.env.FRONTEND_URL}`);
