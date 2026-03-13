@@ -57,14 +57,16 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   
   // Serve static files from uploads directory (before other routes)
-  // Use /opt/render/project/uploads for persistent storage on Render
-  const uploadsDir = process.env.RENDER ? '/opt/render/project/uploads' : path.join(process.cwd(), 'uploads');
+  // Use current working directory for persistent storage on Render
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  
   if (!fs.existsSync(uploadsDir)) {
     console.log('[Server] Creating uploads directory...');
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
   app.use('/uploads', express.static(uploadsDir));
   console.log('[Server] Serving uploads from:', uploadsDir);
+  console.log('[Server] Current working directory:', process.cwd());
   
   // Log uploads directory contents on startup
   try {
