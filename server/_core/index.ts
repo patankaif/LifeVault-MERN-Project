@@ -57,13 +57,22 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   
   // Serve static files from uploads directory (before other routes)
-  const uploadsDir = path.join(process.cwd(), 'uploads');
+  // Use /opt/render/project/uploads for persistent storage on Render
+  const uploadsDir = process.env.RENDER ? '/opt/render/project/uploads' : path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     console.log('[Server] Creating uploads directory...');
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
   app.use('/uploads', express.static(uploadsDir));
   console.log('[Server] Serving uploads from:', uploadsDir);
+  
+  // Log uploads directory contents on startup
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    console.log(`[Server] Uploads directory contains ${files.length} files:`, files.slice(0, 5));
+  } catch (error) {
+    console.log('[Server] Could not read uploads directory:', (error as Error).message);
+  }
   
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);

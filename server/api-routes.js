@@ -261,11 +261,12 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       
       const fileBuffer = Buffer.from(file, 'base64');
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
-      const filePath = path.join(process.cwd(), 'uploads', fileName);
+      const uploadsDir = process.env.RENDER ? '/opt/render/project/uploads' : path.join(process.cwd(), 'uploads');
+      const filePath = path.join(uploadsDir, fileName);
       
       // Ensure uploads directory exists
-      if (!fs.existsSync(path.join(process.cwd(), 'uploads'))) {
-        fs.mkdirSync(path.join(process.cwd(), 'uploads'), { recursive: true });
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
         console.log('[Upload] Created uploads directory');
       }
       
