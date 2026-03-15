@@ -889,22 +889,14 @@ export default function PresentVault() {
                     className="hidden"
                   />
 
-                  {/* Content Display Area */}
-                  <div className={`flex-1 space-y-3 ${totalItems > 9 ? 'overflow-y-auto' : ''}`}>
-                    {/* Unified Content Grid */}
-                    {totalItems > 0 ? (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-xs text-gray-600">Content</h4>
-                        <div className="grid grid-cols-3 gap-2">
-                          {/* Render all content items */}
                           {texts.slice(0, 9).map(t => (
-                            <div key={t._id} className="relative group bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200 h-24 flex flex-col justify-between hover:shadow-md transition-all duration-200">
+                            <div key={t._id} className="relative group bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 hover:shadow-md transition-all duration-200">
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                   <div className="bg-blue-100 p-1.5 rounded-full">
-                                    <MessageSquare className="text-blue-600" size={10} />
+                                    <MessageSquare className="text-blue-600" size={12} />
                                   </div>
-                                  <span className="text-xs text-gray-500 font-medium">Text</span>
+                                  <span className="text-xs text-blue-600 font-medium">Message</span>
                                 </div>
                                 {!readOnlyMode && (
                                 <button 
@@ -915,16 +907,31 @@ export default function PresentVault() {
                                     <Trash2 size={8} />
                                   </div>
                                 </button>
-                              )}
+                                )}
                               </div>
-                              <p className="text-xs text-gray-700 leading-relaxed line-clamp-3 break-all flex-1">{t.content}</p>
+                              <p className="text-sm text-gray-700 leading-relaxed break-all">{t.content}</p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                {new Date(t.createdAt).toLocaleString()}
+                              </p>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Media Section */}
+                    {media.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <ImageIcon size={14} />
+                          Photos & Videos ({media.length})
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
                           {media.slice(0, 9).map(m => {
                             console.log('Rendering media:', m.type, m.url);
                             return (
                               <div key={m._id} className="relative group cursor-pointer" onClick={() => setExpandedSlot(expandedSlot === slot._id ? null : slot._id)}>
-                                <div className="h-24 rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-100 hover:border-blue-300 transition-all">
+                                <div className="aspect-square rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-100 hover:border-blue-300 transition-all">
                                   {m.type === 'image' ? (
                                     <div className="relative w-full h-full">
                                       <img 
@@ -937,7 +944,7 @@ export default function PresentVault() {
                                           e.target.style.backgroundColor = '#ff0000';
                                         }}
                                       />
-                                      <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
+                                      <div className="absolute top-2 right-2 bg-black bg-opacity-50 flex items-center justify-center p-1 rounded-full">
                                         <ImageIcon size={16} className="text-white" />
                                       </div>
                                     </div>
@@ -947,9 +954,9 @@ export default function PresentVault() {
                                       src={m.url} 
                                       className="w-full h-full object-cover"
                                       muted
-                                      playsInline
-                                      preload="metadata"
-                                      onLoadedData={() => console.log('Video loaded successfully:', m.url)}
+                                      controls={false}
+                                      onMouseEnter={(e) => e.target.play()}
+                                      onMouseLeave={(e) => e.target.pause()}
                                       onError={(e) => {
                                         console.error('Video failed to load:', m.url, e);
                                         e.target.style.backgroundColor = '#ff0000';
