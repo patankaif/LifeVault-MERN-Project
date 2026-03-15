@@ -856,21 +856,21 @@ export default function PresentVault() {
                       </Button>
                     )}
                     {!readOnlyMode && (
-                    <>
-                    <Button variant="outline" size="sm" onClick={() => {
-                      setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
-                      setTimeout(() => document.getElementById(`image-input-${slot._id}`)?.click(), 100);
-                    }} className="text-xs h-8">
-                      <ImageIcon size={12} className="mr-1" /> Image
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => {
-                      setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
-                      setTimeout(() => document.getElementById(`video-input-${slot._id}`)?.click(), 100);
-                    }} className="text-xs h-8">
-                      <VideoIcon size={12} className="mr-1" /> Video
-                    </Button>
-                    </>
-                  )}
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
+                          setTimeout(() => document.getElementById(`image-input-${slot._id}`)?.click(), 100);
+                        }} className="text-xs h-8">
+                          <ImageIcon size={12} className="mr-1" /> Image
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
+                          setTimeout(() => document.getElementById(`video-input-${slot._id}`)?.click(), 100);
+                        }} className="text-xs h-8">
+                          <VideoIcon size={12} className="mr-1" /> Video
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col overflow-hidden p-4">
