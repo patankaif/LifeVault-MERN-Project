@@ -236,6 +236,82 @@ router.put('/slots/:slotId', verifyToken, async (req, res) => {
   }
 });
 
+// Debug endpoint to check uploads directory
+router.get('/debug/uploads', async (req, res) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    console.log('[Debug] Checking uploads directory:', uploadsDir);
+    
+    const exists = fs.existsSync(uploadsDir);
+    let files = [];
+    
+    if (exists) {
+      files = fs.readdirSync(uploadsDir);
+      const fileDetails = files.map(file => {
+        const filePath = path.join(uploadsDir, file);
+        const stats = fs.statSync(filePath);
+        return {
+          name: file,
+          size: stats.size,
+          created: stats.birthtime,
+          url: `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads/${file}`
+        };
+      });
+      
+      res.json({
+        success: true,
+        uploadsDir,
+        exists,
+        files: fileDetails,
+        count: files.length
+      });
+    } else {
+      res.json({
+        success: false,
+        uploadsDir,
+        exists: false,
+        message: 'Uploads directory does not exist'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Test file creation endpoint
+router.post('/debug/test-upload', async (req, res) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const testFileName = `test-${Date.now()}.txt`;
+    const testFilePath = path.join(uploadsDir, testFileName);
+    const testContent = `Test file created at ${new Date().toISOString()}`;
+    
+    fs.writeFileSync(testFilePath, testContent);
+    
+    const testUrl = `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads/${testFileName}`;
+    
+    res.json({
+      success: true,
+      message: 'Test file created',
+      fileName: testFileName,
+      url: testUrl,
+      path: testFilePath
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ==================== MEDIA ROUTES ====================
 
 // Add media to slot
