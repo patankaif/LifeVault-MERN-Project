@@ -318,6 +318,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/authFetch';
 import { Button } from '@/components/ui/button';
+import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 

@@ -309,6 +309,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/authFetch';
 import { Button } from '@/components/ui/button';
+import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -357,6 +358,12 @@ export default function PresentVault() {
   const [readOnlyMode, setReadOnlyMode] = useState(false); // For read-only shared slot view
   const [editingText, setEditingText] = useState(null);
   const [newText, setNewText] = useState({});
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    slotId: null,
+    type: 'slot', // 'slot' or 'schedule'
+    slotName: ''
+  });
   const [uploadingMedia, setUploadingMedia] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
   const [editingSlotName, setEditingSlotName] = useState('');
@@ -469,19 +476,41 @@ export default function PresentVault() {
   };
 
   const deleteSlot = async (slotId) => {
-    if (!window.confirm('Are you sure?')) return;
+    const slot = slots.find(s => s._id === slotId);
+    setDeleteDialog({
+      isOpen: true,
+      slotId,
+      type: 'slot',
+      slotName: slot?.name || 'this memory'
+    });
+  };
+
+  const confirmDeleteSlot = async () => {
     try {
-      const response = await authFetch(`/api/slots/${slotId}`, {
+      const response = await authFetch(`/api/slots/${deleteDialog.slotId}`, {
         method: 'DELETE',
         body: JSON.stringify({ vaultType: 'present' }),
       });
       const data = await response.json();
       if (data.success) {
-        setSlots(slots.filter(s => s._id !== slotId));
+        fetchSlots();
+        setDeleteDialog({ isOpen: false, slotId: null, type: 'slot', slotName: '' });
+      } else {
+        setError(data.message);
       }
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const confirmDeleteSchedule = async () => {
+    // Delete delivery schedule
+    setSlots(slots.map(s => 
+      s._id === deleteDialog.slotId 
+        ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
+        : s
+    ));
+    setDeleteDialog({ isOpen: false, slotId: null, type: 'schedule', slotName: '' });
   };
 
   const addText = async (slotId) => {
@@ -998,12 +1027,26 @@ export default function PresentVault() {
                           className="flex-1 bg-teal-600 hover:bg-teal-700 text-white" 
                           size="sm" 
                           onClick={() => {
-                            // Reset slot for new schedule
-                            setSlots(slots.map(s => 
-                              s._id === slot._id 
-                                ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
-                                : s
-                            ));
+                            const deleteSchedule = async (slotId) => {
+                              const slot = slots.find(s => s._id === slotId);
+                              setDeleteDialog({
+                                isOpen: true,
+                                slotId,
+                                type: 'schedule',
+                                slotName: slot?.name || 'this delivery time'
+                              });
+                            };
+
+                            const confirmDeleteSchedule = async () => {
+                              // Delete delivery schedule
+                              setSlots(slots.map(s => 
+                                s._id === deleteDialog.slotId 
+                                  ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
+                                  : s
+                              ));
+                              setDeleteDialog({ isOpen: false, slotId: null, type: 'schedule', slotName: '' });
+                            };
+                            deleteSchedule(slot._id);
                           }}
                         >
                           <Mail size={14} className="mr-1" /> New Schedule
@@ -1057,14 +1100,13 @@ export default function PresentVault() {
                           className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs" 
                           size="sm" 
                           onClick={() => {
-                            if (window.confirm('Are you sure to delete this delivery time?')) {
-                              // Delete delivery schedule
-                              setSlots(slots.map(s => 
-                                s._id === slot._id 
-                                  ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
-                                  : s
-                              ));
-                            }
+                            const slot = slots.find(s => s._id === slot._id);
+                            setDeleteDialog({
+                              isOpen: true,
+                              slotId: slot._id,
+                              type: 'schedule',
+                              slotName: slot?.name || 'this delivery time'
+                            });
                           }}
                         >
                           <Trash2 size={14} className="mr-1" /> Delete
@@ -1275,6 +1317,21 @@ export default function PresentVault() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, slotId: null, type: 'slot', slotName: '' })}
+        onConfirm={deleteDialog.type === 'slot' ? confirmDeleteSlot : confirmDeleteSchedule}
+        title={deleteDialog.type === 'slot' ? 'Delete Memory' : 'Delete Delivery Schedule'}
+        message={
+          deleteDialog.type === 'slot'
+            ? `Are you sure you want to delete "${deleteDialog.slotName}"? This action cannot be undone.`
+            : `Are you sure you want to delete the delivery schedule for "${deleteDialog.slotName}"?`
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
