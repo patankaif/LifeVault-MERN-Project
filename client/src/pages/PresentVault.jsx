@@ -13,9 +13,27 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Hook to get URL query parameters
+const useQuery = () => {
+  const [location] = useLocation();
+  const query = new URLSearchParams(location.split('?')[1] || '');
+  return query;
+};
+
+// Animated Button Component
+const AnimatedButton = ({ children, className, ...props }) => (
+  <Button 
+    className={`${className} transform transition-all duration-200 hover:scale-105 active:scale-95`} 
+    {...props}
+  >
+    {children}
+  </Button>
+);
+
 export default function PresentVault() {
   const [, navigate] = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const query = useQuery();
   const [slots, setSlots] = useState([]);
   const [newSlotName, setNewSlotName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,6 +47,7 @@ export default function PresentVault() {
   const [editingSlot, setEditingSlot] = useState(null);
   const [editingSlotName, setEditingSlotName] = useState('');
   const [viewSlotModal, setViewSlotModal] = useState(null);
+  const focusedSlotId = query.get('slot');
 
   useEffect(() => {
     if (!authLoading) {
@@ -202,21 +221,23 @@ export default function PresentVault() {
         </div>
 
         {/* Add Slot Button */}
-        {!readOnlyMode && (
-          <div className="mb-6">
-            <Button 
-              onClick={() => setShowAddSlot(!showAddSlot)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3"
-            >
-              <Plus size={20} className="mr-2" />
-              Create New Memory
-            </Button>
-          </div>
-        )}
+        <div className="mb-6">
+          <AnimatedButton 
+            onClick={() => setShowAddSlot(!showAddSlot)}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3"
+          >
+            <Plus size={20} className="mr-2" />
+            Create New Memory
+          </AnimatedButton>
+        </div>
 
         {/* Add Slot Form */}
         {showAddSlot && (
-          <Card className="mb-6 border-none shadow-xl bg-white">
+          <Card className="mb-6 border-none shadow-xl bg-white ring-1 ring-slate-200">
+            <CardHeader className="border-b border-slate-50">
+              <CardTitle className="text-lg">Create Instant Memory</CardTitle>
+              <CardDescription>Share something special right now</CardDescription>
+            </CardHeader>
             <CardContent className="p-6">
               <div className="flex gap-2">
                 <Input 
@@ -225,9 +246,9 @@ export default function PresentVault() {
                   onChange={e => setNewSlotName(e.target.value)} 
                   className="flex-1"
                 />
-                <Button onClick={createSlot}>
+                <AnimatedButton onClick={createSlot}>
                   <Plus size={18} className="mr-2" />Add
-                </Button>
+                </AnimatedButton>
               </div>
             </CardContent>
           </Card>
@@ -235,22 +256,34 @@ export default function PresentVault() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-3">
+          <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-3 text-sm font-medium">
             <AlertCircle size={18} />
             {error}
           </div>
         )}
 
-        {/* Slots Grid */}
+        {focusedSlotId && (
+          <div className="mb-6 flex items-center justify-center">
+            <div className="text-sm text-gray-600 text-center">
+              Viewing shared slot: <span className="font-semibold">{slots.find(s => s._id === focusedSlotId)?.name}</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {slots.map(slot => {
+          {slots.filter(slot => !focusedSlotId || slot._id === focusedSlotId).map(slot => {
             const texts = slot.texts || [];
             const media = slot.media || [];
+            const totalItems = texts.length + media.length;
+            
+            let cardHeight = 'h-138';
+            if (totalItems > 3) cardHeight = 'h-141';
+            if (totalItems > 6) cardHeight = 'h-163';
+            if (totalItems > 9) cardHeight = 'h-168';
             
             return (
-              <Card key={slot._id} className="flex flex-col overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all">
-                {/* Header with Slot Name */}
-                <CardHeader className="flex flex-col items-center justify-center text-center pb-4 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <Card key={slot._id} className={`flex flex-col overflow-hidden ${cardHeight}`}>
+                <CardHeader className="flex flex-col items-center justify-center text-center pb-2 flex-shrink-0">
                   <div className="relative w-full">
                     {editingSlot === slot._id ? (
                       <Input 
@@ -258,12 +291,12 @@ export default function PresentVault() {
                         onChange={e => setEditingSlotName(e.target.value)}
                         onBlur={() => updateSlotName(slot._id)}
                         onKeyDown={e => e.key === 'Enter' && updateSlotName(slot._id)}
-                        className="text-2xl font-bold text-center mb-2 border-2 border-blue-500 bg-white"
+                        className="text-xl font-bold text-center mb-2 border-2 border-blue-500"
                         autoFocus
                       />
                     ) : (
                       <CardTitle 
-                        className="text-2xl font-bold text-center mb-2 text-gray-800 cursor-pointer hover:text-blue-600" 
+                        className="text-xl font-bold text-center mb-2 cursor-pointer hover:text-blue-600" 
                         onClick={() => {
                           setEditingSlot(slot._id);
                           setEditingSlotName(slot.name);
@@ -272,51 +305,65 @@ export default function PresentVault() {
                         {slot.name}
                       </CardTitle>
                     )}
-                    <div className="flex justify-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50" onClick={() => setViewSlotModal(slot)}>
+                    <div className="flex gap-2 absolute top-0 right-0">
+                      <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => setViewSlotModal(slot)}>
                         <Eye size={16} />
                       </Button>
-                      {!readOnlyMode && (
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => deleteSlot(slot._id)}>
-                          <Trash2 size={16} />
-                        </Button>
-                      )}
+                      <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteSlot(slot._id)}>
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
                   </div>
-                  <CardDescription className="text-sm text-gray-600">{media.length} media, {texts.length} texts</CardDescription>
+                  <CardDescription className="text-sm mb-3">{media.length} media, {texts.length} texts</CardDescription>
                   
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-3 gap-2 w-full mt-3">
-                    {!readOnlyMode && (
-                      <Button variant="outline" size="sm" onClick={() => {
-                        setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
-                        setTimeout(() => document.getElementById(`text-input-${slot._id}`)?.focus(), 100);
-                      }} className="text-xs">
-                        <MessageSquare size={12} className="mr-1" /> Text
-                      </Button>
-                    )}
-                    {!readOnlyMode && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
-                          setTimeout(() => document.getElementById(`image-input-${slot._id}`)?.click(), 100);
-                        }} className="text-xs">
-                          <ImageIcon size={12} className="mr-1" /> Image
+                  {/* Scheduled Email Display */}
+                  {slot.scheduledEmail && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Mail size={16} className="text-blue-600" />
+                          <div>
+                            <p className="text-sm font-semibold text-blue-800">Scheduled for:</p>
+                            <p className="text-lg font-bold text-blue-900">{slot.scheduledEmail}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-blue-600 hover:text-blue-800"
+                          onClick={() => console.log('User liked scheduled email for:', slot.scheduledEmail)}
+                        >
+                          <ThumbsUp size={14} />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
-                          setTimeout(() => document.getElementById(`video-input-${slot._id}`)?.click(), 100);
-                        }} className="text-xs">
-                          <VideoIcon size={12} className="mr-1" /> Video
-                        </Button>
-                      </>
-                    )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add Content Buttons Row */}
+                  <div className="grid grid-cols-3 gap-4 mb-2 flex-shrink-0">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
+                      setTimeout(() => document.getElementById(`text-input-${slot._id}`)?.focus(), 100);
+                    }} className="text-xs h-8">
+                      <MessageSquare size={12} className="mr-1" /> Text
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
+                      setTimeout(() => document.getElementById(`image-input-${slot._id}`)?.click(), 100);
+                    }} className="text-xs h-8">
+                      <ImageIcon size={12} className="mr-1" /> Image
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setExpandedSlot(expandedSlot === slot._id ? null : slot._id);
+                      setTimeout(() => document.getElementById(`video-input-${slot._id}`)?.click(), 100);
+                    }} className="text-xs h-8">
+                      <VideoIcon size={12} className="mr-1" /> Video
+                    </Button>
                   </div>
                 </CardHeader>
 
-                {/* Content Area */}
                 <CardContent className="flex-1 flex flex-col overflow-hidden p-4">
-                  {/* Hidden Inputs */}
+                  {/* Hidden file inputs */}
                   <input
                     id={`text-input-${slot._id}`}
                     type="text"
@@ -338,78 +385,128 @@ export default function PresentVault() {
                     className="hidden"
                   />
 
-                  {/* Messages Section */}
-                  {texts.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-2">
-                        <MessageSquare size={14} />
-                        Messages ({texts.length})
-                      </h4>
+                  {/* Content Display Area - Unified Grid like FutureVault */}
+                  <div className={`flex-1 space-y-3 ${totalItems > 9 ? 'overflow-y-auto' : ''}`}>
+                    {totalItems > 0 ? (
                       <div className="space-y-2">
-                        {texts.map(t => (
-                          <div key={t._id} className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                            <p className="text-gray-800 text-sm">{t.content}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {new Date(t.createdAt).toLocaleString()}
-                            </p>
+                        <h4 className="font-medium text-xs text-gray-600">Content</h4>
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* Render text items */}
+                          {texts.slice(0, 9).map(t => (
+                            <div key={t._id} className="relative group bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200 h-24 flex flex-col justify-between hover:shadow-md transition-all duration-200">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="bg-blue-100 p-1.5 rounded-full">
+                                    <MessageSquare className="text-blue-600" size={10} />
+                                  </div>
+                                  <span className="text-xs text-gray-500 font-medium">Text</span>
+                                </div>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Delete text functionality if needed
+                                  }} 
+                                  className="opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                >
+                                  <div className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600">
+                                    <Trash2 size={8} />
+                                  </div>
+                                </button>
+                              </div>
+                              <p className="text-xs text-gray-700 leading-relaxed line-clamp-3 break-all flex-1">{t.content}</p>
+                            </div>
+                          ))}
+                          
+                          {/* Render media items */}
+                          {media.slice(0, 9).map(m => (
+                            <div key={m._id} className="relative group cursor-pointer" onClick={() => setExpandedSlot(expandedSlot === slot._id ? null : slot._id)}>
+                              <div className="h-24 rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-100 hover:border-blue-300 transition-all">
+                                {m.type === 'image' ? (
+                                  <div className="relative w-full h-full">
+                                    <img 
+                                      src={m.url} 
+                                      className="w-full h-full object-cover" 
+                                      alt="Media"
+                                      onLoad={() => console.log('Image loaded successfully:', m.url)}
+                                      onError={(e) => {
+                                        console.error('Image failed to load:', m.url, e);
+                                        e.target.style.backgroundColor = '#ff0000';
+                                      }}
+                                    />
+                                    <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
+                                      <ImageIcon size={16} className="text-white" />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="relative w-full h-full">
+                                    <video 
+                                      src={m.url} 
+                                      className="w-full h-full object-cover"
+                                      muted
+                                      controls={false}
+                                      onMouseEnter={(e) => e.target.play()}
+                                      onMouseLeave={(e) => e.target.pause()}
+                                      onError={(e) => {
+                                        console.error('Video failed to load:', m.url, e);
+                                        e.target.style.backgroundColor = '#ff0000';
+                                      }}
+                                    />
+                                    <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
+                                      <VideoIcon size={16} className="text-white" />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Delete media functionality if needed
+                                }} 
+                                className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Show more indicator if content exceeds 9 items */}
+                        {totalItems > 9 && (
+                          <div className="h-20 bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-xs text-gray-500">+{totalItems - 9}</div>
+                              <div className="text-xs text-gray-500">more</div>
+                            </div>
                           </div>
-                        ))}
+                        )}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Media Section */}
-                  {media.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <ImageIcon size={14} />
-                        Photos & Videos ({media.length})
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {media.map(m => (
-                          <div key={m._id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                            {m.type === 'image' ? (
-                              <img 
-                                src={m.url} 
-                                alt="Media" 
-                                className="w-full h-full object-cover"
-                                onClick={() => window.open(m.url, '_blank')}
-                              />
-                            ) : (
-                              <video 
-                                src={m.url} 
-                                className="w-full h-full object-cover"
-                                controls
-                                onClick={() => window.open(m.url, '_blank')}
-                              />
-                            )}
-                          </div>
-                        ))}
+                    ) : (
+                      /* Empty State */
+                      <div className="text-center py-8 text-gray-400">
+                        <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No content yet. Add messages or media to get started!</p>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
-                  {/* Add Content Area */}
-                  {expandedSlot === slot._id && !readOnlyMode && (
-                    <div className="border-t pt-3 mt-auto">
-                      <Input
-                        placeholder="Type your message..."
-                        value={newText[slot._id] || ''}
-                        onChange={e => setNewText({ ...newText, [slot._id]: e.target.value })}
-                        className="w-full mb-2"
-                        onKeyPress={e => e.key === 'Enter' && addText(slot._id)}
-                      />
-                      <Button onClick={() => addText(slot._id)} size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                        <MessageSquare size={14} className="mr-1" /> Add Message
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Empty State */}
-                  {texts.length === 0 && media.length === 0 && (
-                    <div className="text-center py-8 text-gray-400">
-                      <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No content yet. Add messages or media to get started!</p>
+                  {/* Add Content Section */}
+                  {expandedSlot === slot._id && (
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <div className="space-y-3">
+                        <Input
+                          id={`text-input-${slot._id}`}
+                          placeholder="Type your message..."
+                          value={newText[slot._id] || ''}
+                          onChange={e => setNewText({ ...newText, [slot._id]: e.target.value })}
+                          className="w-full"
+                          onKeyPress={e => e.key === 'Enter' && addText(slot._id)}
+                        />
+                        <div className="flex gap-2">
+                          <Button onClick={() => addText(slot._id)} size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                            <MessageSquare size={14} className="mr-1" /> Add Message
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -421,15 +518,39 @@ export default function PresentVault() {
         {/* Empty State for No Slots */}
         {slots.length === 0 && (
           <div className="text-center py-16">
-            <Package size={64} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No memories yet</h3>
-            <p className="text-gray-500 mb-6">Create your first memory to get started</p>
-            <Button onClick={() => setShowAddSlot(true)} className="bg-blue-600 hover:bg-blue-700">
+            <div className="mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-emerald-50">
+                <Package className="w-12 h-12 text-emerald-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No memories yet</h3>
+              <p className="text-gray-600 max-w-sm mx-auto leading-relaxed">
+                Start creating your first instant memory to share with someone special.
+              </p>
+            </div>
+            <AnimatedButton 
+              onClick={() => setShowAddSlot(true)} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 text-lg shadow-lg"
+            >
               <Plus size={20} className="mr-2" />
               Create First Memory
-            </Button>
+            </AnimatedButton>
           </div>
         )}
+
+        {/* Info Card */}
+        <Card className="mt-16 border-none shadow-sm bg-emerald-50/50 border border-emerald-100">
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+              <Info size={20} />
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-900">About Present Vault</h4>
+              <p className="text-sm text-emerald-700 mt-1 leading-relaxed">
+                The Present Vault is for memories you want to share right now. Unlike the Future Vault, there's no long-term scheduling required. Simply add your content, set a recipient, and send it instantly.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
