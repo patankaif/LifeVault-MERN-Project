@@ -783,8 +783,9 @@ export default function PresentVault() {
             if (totalItems > 9) cardHeight = 'h-168';
             
             return (
-              <Card key={slot._id} className={`flex flex-col overflow-hidden ${cardHeight}`}>
-                <CardHeader className="flex flex-col items-center justify-center text-center pb-2 flex-shrink-0">
+              <Card key={slot._id} className={`flex flex-col overflow-hidden ${cardHeight} bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all`}>
+                {/* Slot Name in Middle - Header */}
+                <CardHeader className="flex flex-col items-center justify-center text-center pb-4 flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50">
                   <div className="relative w-full">
                     {editingSlot === slot._id ? (
                       <Input 
@@ -792,12 +793,12 @@ export default function PresentVault() {
                         onChange={e => setEditingSlotName(e.target.value)}
                         onBlur={() => updateSlotName(slot._id)}
                         onKeyDown={e => e.key === 'Enter' && updateSlotName(slot._id)}
-                        className="text-xl font-bold text-center mb-2 border-2 border-blue-500"
+                        className="text-2xl font-bold text-center mb-2 border-2 border-blue-500 bg-white"
                         autoFocus
                       />
                     ) : (
                       <CardTitle 
-                        className={`text-xl font-bold text-center mb-2 ${!readOnlyMode ? 'cursor-pointer hover:text-blue-600' : ''}`} 
+                        className={`text-2xl font-bold text-center mb-2 text-gray-800 ${!readOnlyMode ? 'cursor-pointer hover:text-blue-600' : ''}`} 
                         onClick={() => {
                           if (!readOnlyMode) {
                             setEditingSlot(slot._id);
@@ -809,17 +810,18 @@ export default function PresentVault() {
                       </CardTitle>
                     )}
                     <div className="flex justify-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => setViewSlotModal(slot)}>
+                      <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50" onClick={() => setViewSlotModal(slot)}>
                         <Eye size={16} />
                       </Button>
                       {!readOnlyMode && (
-                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteSlot(slot._id)}>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => deleteSlot(slot._id)}>
                           <Trash2 size={16} />
                         </Button>
                       )}
                     </div>
                   </div>
-                  <CardDescription className="text-sm mb-3">{media.length} media, {texts.length} texts</CardDescription>
+                  <CardDescription className="text-sm text-gray-600">{media.length} media, {texts.length} texts</CardDescription>
+                </CardHeader>
                   
                   {/* Scheduled Email Display */}
                   {slot.scheduledEmail && (
@@ -875,6 +877,12 @@ export default function PresentVault() {
                 <CardContent className="flex-1 flex flex-col overflow-hidden p-4">
                   {/* Hidden file inputs */}
                   <input
+                    id={`text-input-${slot._id}`}
+                    type="text"
+                    placeholder="Type your message..."
+                    className="hidden"
+                  />
+                  <input
                     id={`image-input-${slot._id}`}
                     type="file"
                     accept="image/*"
@@ -889,37 +897,19 @@ export default function PresentVault() {
                     className="hidden"
                   />
 
-                  {/* Content Display - Texts First, Then Media */}
+                  {/* Content Display - Messages First, Then Media */}
                   <div className="flex-1 overflow-y-auto space-y-4">
-                    {/* Texts Section */}
+                    {/* Messages Section - Always First */}
                     {texts.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
                           <MessageSquare size={14} />
                           Messages ({texts.length})
                         </h4>
-                        <div className="grid grid-cols-1 gap-2">
-                          {texts.slice(0, 9).map(t => (
-                            <div key={t._id} className="relative group bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 hover:shadow-md transition-all duration-200">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="bg-blue-100 p-1.5 rounded-full">
-                                    <MessageSquare className="text-blue-600" size={12} />
-                                  </div>
-                                  <span className="text-xs text-blue-600 font-medium">Message</span>
-                                </div>
-                                {!readOnlyMode && (
-                                <button 
-                                  onClick={() => deleteText(slot._id, t._id)} 
-                                  className="opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                >
-                                  <div className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600">
-                                    <Trash2 size={8} />
-                                  </div>
-                                </button>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-700 leading-relaxed break-all">{t.content}</p>
+                        <div className="space-y-2">
+                          {texts.map(t => (
+                            <div key={t._id} className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm">
+                              <p className="text-gray-800 text-sm leading-relaxed">{t.content}</p>
                               <p className="text-xs text-gray-500 mt-2">
                                 {new Date(t.createdAt).toLocaleString()}
                               </p>
@@ -929,156 +919,48 @@ export default function PresentVault() {
                       </div>
                     )}
 
-                    {/* Media Section */}
+                    {/* Media Section - After Messages */}
                     {media.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                           <ImageIcon size={14} />
                           Photos & Videos ({media.length})
                         </h4>
                         <div className="grid grid-cols-2 gap-3">
-                          {media.slice(0, 9).map(m => {
-                            console.log('Rendering media:', m.type, m.url);
-                            return (
-                              <div key={m._id} className="relative group cursor-pointer" onClick={() => setExpandedSlot(expandedSlot === slot._id ? null : slot._id)}>
-                                <div className="aspect-square rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-100 hover:border-blue-300 transition-all">
-                                  {m.type === 'image' ? (
-                                    <div className="relative w-full h-full">
-                                      <img 
-                                        src={m.url} 
-                                        className="w-full h-full object-cover" 
-                                        alt="Media"
-                                        onLoad={() => console.log('Image loaded successfully:', m.url)}
-                                        onError={(e) => {
-                                          console.error('Image failed to load:', m.url, e);
-                                          e.target.style.backgroundColor = '#ff0000';
-                                        }}
-                                      />
-                                      <div className="absolute top-2 right-2 bg-black bg-opacity-50 flex items-center justify-center p-1 rounded-full">
-                                        <ImageIcon size={16} className="text-white" />
-                                      </div>
-                                    </div>
-                                  ) : (
-                                  <div className="relative w-full h-full">
-                                    <video 
-                                      src={m.url} 
-                                      className="w-full h-full object-cover"
-                                      muted
-                                      controls={false}
-                                      onMouseEnter={(e) => e.target.play()}
-                                      onMouseLeave={(e) => e.target.pause()}
-                                      onError={(e) => {
-                                        console.error('Video failed to load:', m.url, e);
-                                        e.target.style.backgroundColor = '#ff0000';
-                                      }}
-                                    />
-                                    <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
-                                      <VideoIcon size={16} className="text-white" />
-                                    </div>
-                                  </div>
-                                  )}
-                                </div>
-                                {!readOnlyMode && (
-                                <button 
-                                  onClick={() => deleteMedia(slot._id, m._id)} 
-                                  className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              )}
+                          {media.map(m => (
+                            <div key={m._id} className="relative group">
+                              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                {m.type === 'image' ? (
+                                  <img 
+                                    src={m.url} 
+                                    alt="Media" 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                    onClick={() => window.open(m.url, '_blank')}
+                                  />
+                                ) : (
+                                  <video 
+                                    src={m.url} 
+                                    className="w-full h-full object-cover"
+                                    controls
+                                    onClick={() => window.open(m.url, '_blank')}
+                                  />
+                                )}
                               </div>
-                            );
-                          })}
-                          {/* Show more indicator if content exceeds 9 items */}
-                          {totalItems > 9 && (
-                            <div className="h-20 bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
-                              <div className="text-center">
-                                <div className="text-xs text-gray-500">+{totalItems - 9}</div>
-                                <div className="text-xs text-gray-500">more</div>
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white" onClick={() => window.open(m.url, '_blank')}>
+                                  <Eye size={12} />
+                                </Button>
                               </div>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Media Section */}
-                    {media.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                          <ImageIcon size={14} />
-                          Photos & Videos ({media.length})
-                        </h4>
-                        <div className="grid grid-cols-2 gap-3">
-                          {media.slice(0, 9).map(m => {
-                            console.log('Rendering media:', m.type, m.url);
-                            return (
-                              <div key={m._id} className="relative group cursor-pointer" onClick={() => setExpandedSlot(expandedSlot === slot._id ? null : slot._id)}>
-                                <div className="aspect-square rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-100 hover:border-blue-300 transition-all">
-                                  {m.type === 'image' ? (
-                                    <div className="relative w-full h-full">
-                                      <img 
-                                        src={m.url} 
-                                        className="w-full h-full object-cover" 
-                                        alt="Media"
-                                        onLoad={() => console.log('Image loaded successfully:', m.url)}
-                                        onError={(e) => {
-                                          console.error('Image failed to load:', m.url, e);
-                                          e.target.style.backgroundColor = '#ff0000';
-                                        }}
-                                      />
-                                      <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
-                                        <ImageIcon size={16} className="text-white" />
-                                      </div>
-                                    </div>
-                                  ) : (
-                                  <div className="relative w-full h-full">
-                                    <video 
-                                      src={m.url} 
-                                      className="w-full h-full object-cover"
-                                      muted
-                                      controls={false}
-                                      onMouseEnter={(e) => e.target.play()}
-                                      onMouseLeave={(e) => e.target.pause()}
-                                      onError={(e) => {
-                                        console.error('Video failed to load:', m.url, e);
-                                        e.target.style.backgroundColor = '#ff0000';
-                                      }}
-                                    />
-                                    <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
-                                      <VideoIcon size={16} className="text-white" />
-                                    </div>
-                                  </div>
-                                  )}
-                                </div>
-                                {!readOnlyMode && (
-                                <button 
-                                  onClick={() => deleteMedia(slot._id, m._id)} 
-                                  className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              )}
-                              </div>
-                            );
-                          })}
-                          {/* Show more indicator if content exceeds 9 items */}
-                          {totalItems > 9 && (
-                            <div className="aspect-square bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
-                              <div className="text-center">
-                                <div className="text-xs text-gray-500">+{totalItems - 9}</div>
-                                <div className="text-xs text-gray-500">more</div>
-                              </div>
-                            </div>
-                          )}
+                          ))}
                         </div>
                       </div>
                     )}
 
                     {/* Empty State */}
                     {texts.length === 0 && media.length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-32 text-gray-400">
-                        <Package size={32} className="mb-2" />
+                      <div className="text-center py-8 text-gray-400">
+                        <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
                         <p className="text-sm">No content yet. Add messages or media to get started!</p>
                       </div>
                     )}
@@ -1086,339 +968,38 @@ export default function PresentVault() {
 
                   {/* Add Content Section */}
                   {expandedSlot === slot._id && !readOnlyMode && (
-                    <div className="space-y-3 border-t pt-3 mt-3 flex-shrink-0">
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <Input 
-                            id={`text-input-${slot._id}`}
-                            placeholder="Add a message..." 
-                            value={newText[slot._id] || ''}
-                            onChange={e => setNewText({ ...newText, [slot._id]: e.target.value })}
-                            onKeyDown={e => e.key === 'Enter' && addText(slot._id)}
-                            className="flex-1 text-sm"
-                          />
-                          <Button size="sm" onClick={() => addText(slot._id)} className="text-xs px-2">Add</Button>
-                        </div>
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      {/* Text Input */}
+                      <div className="mb-3">
+                        <Input
+                          id={`text-input-${slot._id}`}
+                          placeholder="Type your message..."
+                          value={newText[slot._id] || ''}
+                          onChange={e => setNewText({ ...newText, [slot._id]: e.target.value })}
+                          className="w-full"
+                          onKeyPress={e => e.key === 'Enter' && addText(slot._id)}
+                        />
+                        <Button 
+                          onClick={() => addText(slot._id)} 
+                          size="sm" 
+                          className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          <MessageSquare size={14} className="mr-1" /> Add Message
+                        </Button>
                       </div>
                     </div>
-                  )}
-
-                  {/* Schedule Button Status */}
-                  {slot.scheduledDate && slot.delivered ? (
-                    <div className="flex gap-2 w-full mt-3">
-                      <AnimatedButton className="flex-1 bg-green-600 hover:bg-green-700 text-white cursor-default" size="sm">
-                        <Heart size={14} className="mr-1" /> Slot Delivered
-                      </AnimatedButton>
-                      {!readOnlyMode && (
-                        <AnimatedButton 
-                          className="flex-1 bg-teal-600 hover:bg-teal-700 text-white" 
-                          size="sm" 
-                          onClick={() => {
-                            const deleteSchedule = async (slotId) => {
-                              const slot = slots.find(s => s._id === slotId);
-                              setDeleteDialog({
-                                isOpen: true,
-                                slotId,
-                                type: 'schedule',
-                                slotName: slot?.name || 'this delivery time'
-                              });
-                            };
-
-                            const confirmDeleteSchedule = async () => {
-                              // Delete delivery schedule
-                              setSlots(slots.map(s => 
-                                s._id === deleteDialog.slotId 
-                                  ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
-                                  : s
-                              ));
-                              setDeleteDialog({ isOpen: false, slotId: null, type: 'schedule', slotName: '' });
-                            };
-                            deleteSchedule(slot._id);
-                          }}
-                        >
-                          <Mail size={14} className="mr-1" /> New Schedule
-                        </AnimatedButton>
-                      )}
-                    </div>
-                  ) : slot.scheduledDate ? (
-                    <div className="flex gap-2 w-full mt-3">
-                      <AnimatedButton className="flex-1 bg-orange-500 hover:bg-orange-600 text-white cursor-default text-xs" size="sm">
-                        <Mail size={14} className="mr-1 flex-shrink-0" />
-                        <span className="truncate">
-                          Scheduled at {(() => {
-                            const date = new Date(slot.scheduledDate);
-                            // Add timezone offset to display correct local time
-                            const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-                            return localDate.toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric', 
-                              year: 'numeric' 
-                            }) + ' ' + localDate.toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit',
-                              hour12: true 
-                            });
-                          })()}
-                        </span>
-                      </AnimatedButton>
-                      {!readOnlyMode && (
-                        <>
-                        <AnimatedButton 
-                          className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-xs" 
-                          size="sm" 
-                          onClick={() => {
-                            // Pre-populate form with existing data
-                            setScheduleEmail(slot.scheduledEmail || '');
-                            // Format date for datetime-local input (YYYY-MM-DDTHH:MM)
-                            if (slot.scheduledDate) {
-                              const date = new Date(slot.scheduledDate);
-                              const formattedDate = date.toISOString().slice(0, 16);
-                              setScheduleDate(formattedDate);
-                            } else {
-                              setScheduleDate('');
-                            }
-                            setError(''); // Clear any previous error messages
-                            setScheduleModal(slot._id);
-                          }}
-                        >
-                          Edit
-                        </AnimatedButton>
-                        <AnimatedButton 
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs" 
-                          size="sm" 
-                          onClick={() => {
-                            const slot = slots.find(s => s._id === slot._id);
-                            setDeleteDialog({
-                              isOpen: true,
-                              slotId: slot._id,
-                              type: 'schedule',
-                              slotName: slot?.name || 'this delivery time'
-                            });
-                          }}
-                        >
-                          <Trash2 size={14} className="mr-1" /> Delete
-                        </AnimatedButton>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <AnimatedButton className="w-full mt-3 flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white" size="sm" onClick={() => {
-                      // Only allow scheduling if slot has content
-                      const texts = slot.texts || [];
-                      const media = slot.media || [];
-                      const totalItems = texts.length + media.length;
-                      
-                      if (totalItems === 0) {
-                        // Show message instead of opening schedule modal
-                        return;
-                      }
-                      
-                      // Pre-populate form with existing data if available
-                      setScheduleEmail(slot.scheduledEmail || '');
-                      // Format date for datetime-local input (YYYY-MM-DDTHH:MM) - fix timezone issue
-                      if (slot.scheduledDate) {
-                        const date = new Date(slot.scheduledDate);
-                        // Get local date components to avoid UTC conversion
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const hours = String(date.getHours()).padStart(2, '0');
-                        const minutes = String(date.getMinutes()).padStart(2, '0');
-                        const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
-                        setScheduleDate(formattedDate);
-                      } else {
-                        setScheduleDate('');
-                      }
-                      setError(''); // Clear any previous error messages
-                      setScheduleModal(slot._id);
-                    }}>
-                      <Mail size={14} className="mr-1" /> Schedule
-                    </AnimatedButton>
                   )}
                 </CardContent>
               </Card>
             );
           })}
         </div>
-
-        {slots.length === 0 && (
-          <div className="col-span-full py-20 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
-              <Archive size={40} />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900">No slots yet</h3>
-            <p className="text-gray-500 mt-2 max-w-xs mx-auto">
-              Create your first slot to start organizing your memories.
-            </p>
-            <Button 
-              onClick={() => setNewSlotName('')}
-              className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8"
-            >
-              Create First Slot
-            </Button>
-          </div>
-        )}
-
-        {scheduleModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-md">
-              <CardHeader><CardTitle>Schedule Slot</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Recipient Email</label>
-                  <Input 
-                    type="email" 
-                    placeholder="recipient@example.com" 
-                    value={scheduleEmail} 
-                    onChange={e => setScheduleEmail(e.target.value)}
-                    className={error && error.includes('valid email') ? 'border-red-500' : ''}
-                  />
-                  {error && error.includes('valid email') && (
-                    <p className="text-red-500 text-xs mt-1">Please use format: name@domain.com</p>
-                  )}
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Delivery Date & Time</label>
-                  <Input 
-                    type="datetime-local" 
-                    value={scheduleDate} 
-                    onChange={e => setScheduleDate(e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)} // Prevent selecting past dates
-                  />
-                </div>
-                {error && !error.includes('valid email') && (
-                  <div className="text-red-600 text-sm">{error}</div>
-                )}
-                <div className="flex gap-2">
-                  <AnimatedButton onClick={() => scheduleSlot(scheduleModal)} className="flex-1">Schedule</AnimatedButton>
-                  <AnimatedButton variant="outline" onClick={() => {
-                    setScheduleModal(null);
-                    setError('');
-                  }} className="flex-1">Cancel</AnimatedButton>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {viewSlotModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <CardHeader className="flex justify-between items-center">
-                <CardTitle className="text-2xl">{viewSlotModal.name}</CardTitle>
-                <Button variant="ghost" onClick={() => setViewSlotModal(null)}>
-                  <X size={20} />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Slot Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-lg mb-2">Slot Information</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Total Items:</span> {viewSlotModal.media?.length || 0} media, {viewSlotModal.texts?.length || 0} texts
-                    </div>
-                    <div>
-                      <span className="font-medium">Created:</span> {new Date(viewSlotModal.createdAt).toLocaleDateString()}
-                    </div>
-                    {viewSlotModal.scheduledEmail && (
-                      <div className="col-span-2">
-                        <span className="font-medium">Scheduled for:</span> {viewSlotModal.scheduledEmail} on {(() => {
-                          const date = new Date(viewSlotModal.scheduledDate);
-                          // Add timezone offset to display correct local time
-                          const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-                          return localDate.toLocaleString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          });
-                        })()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Media Section */}
-                {viewSlotModal.media && viewSlotModal.media.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3">Media ({viewSlotModal.media.length})</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {viewSlotModal.media.map(m => (
-                        <div key={m._id} className="relative group">
-                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
-                            {m.type === 'image' ? (
-                              <img 
-                                src={m.url} 
-                                alt="Memory" 
-                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                                onClick={() => window.open(m.url, '_blank')}
-                              />
-                            ) : (
-                              <video 
-                                src={m.url} 
-                                className="w-full h-full object-cover"
-                                controls
-                                onClick={() => window.open(m.url, '_blank')}
-                              />
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button size="sm" variant="secondary" onClick={() => window.open(m.url, '_blank')}>
-                              <Eye size={12} />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Texts Section */}
-                {viewSlotModal.texts && viewSlotModal.texts.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3">Texts ({viewSlotModal.texts.length})</h3>
-                    <div className="space-y-3">
-                      {viewSlotModal.texts.map(t => (
-                        <div key={t._id} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                          <p className="text-gray-800 whitespace-pre-wrap">{t.content}</p>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {new Date(t.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Close Button */}
-                <div className="flex justify-end">
-                  <AnimatedButton onClick={() => setViewSlotModal(null)} className="px-8">
-                    Close
-                  </AnimatedButton>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
+    </div>
+  );
+}
 
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
-        isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ isOpen: false, slotId: null, type: 'slot', slotName: '' })}
-        onConfirm={deleteDialog.type === 'slot' ? confirmDeleteSlot : confirmDeleteSchedule}
-        title={deleteDialog.type === 'slot' ? 'Delete Memory' : 'Delete Delivery Schedule'}
-        message={
-          deleteDialog.type === 'slot'
-            ? `Are you sure you want to delete "${deleteDialog.slotName}"? This action cannot be undone.`
-            : `Are you sure you want to delete the delivery schedule for "${deleteDialog.slotName}"?`
-        }
-        confirmText="Delete"
-        cancelText="Cancel"
-      />
+      </div>
     </div>
   );
 }
