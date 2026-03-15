@@ -889,6 +889,16 @@ export default function PresentVault() {
                     className="hidden"
                   />
 
+                  {/* Content Display - Texts First, Then Media */}
+                  <div className="flex-1 overflow-y-auto space-y-4">
+                    {/* Texts Section */}
+                    {texts.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <MessageSquare size={14} />
+                          Messages ({texts.length})
+                        </h4>
+                        <div className="grid grid-cols-1 gap-2">
                           {texts.slice(0, 9).map(t => (
                             <div key={t._id} className="relative group bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 hover:shadow-md transition-all duration-200">
                               <div className="flex items-start justify-between mb-2">
@@ -990,16 +1000,86 @@ export default function PresentVault() {
                           )}
                         </div>
                       </div>
-                    ) : (
-                      /* Empty State */
-                      <div className="text-center py-8">
-                        <div className="mb-4">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                            <MessageSquare size={24} className="text-gray-400" />
-                          </div>
+                    )}
+
+                    {/* Media Section */}
+                    {media.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                          <ImageIcon size={14} />
+                          Photos & Videos ({media.length})
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {media.slice(0, 9).map(m => {
+                            console.log('Rendering media:', m.type, m.url);
+                            return (
+                              <div key={m._id} className="relative group cursor-pointer" onClick={() => setExpandedSlot(expandedSlot === slot._id ? null : slot._id)}>
+                                <div className="aspect-square rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-100 hover:border-blue-300 transition-all">
+                                  {m.type === 'image' ? (
+                                    <div className="relative w-full h-full">
+                                      <img 
+                                        src={m.url} 
+                                        className="w-full h-full object-cover" 
+                                        alt="Media"
+                                        onLoad={() => console.log('Image loaded successfully:', m.url)}
+                                        onError={(e) => {
+                                          console.error('Image failed to load:', m.url, e);
+                                          e.target.style.backgroundColor = '#ff0000';
+                                        }}
+                                      />
+                                      <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
+                                        <ImageIcon size={16} className="text-white" />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                  <div className="relative w-full h-full">
+                                    <video 
+                                      src={m.url} 
+                                      className="w-full h-full object-cover"
+                                      muted
+                                      controls={false}
+                                      onMouseEnter={(e) => e.target.play()}
+                                      onMouseLeave={(e) => e.target.pause()}
+                                      onError={(e) => {
+                                        console.error('Video failed to load:', m.url, e);
+                                        e.target.style.backgroundColor = '#ff0000';
+                                      }}
+                                    />
+                                    <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
+                                      <VideoIcon size={16} className="text-white" />
+                                    </div>
+                                  </div>
+                                  )}
+                                </div>
+                                {!readOnlyMode && (
+                                <button 
+                                  onClick={() => deleteMedia(slot._id, m._id)} 
+                                  className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                              </div>
+                            );
+                          })}
+                          {/* Show more indicator if content exceeds 9 items */}
+                          {totalItems > 9 && (
+                            <div className="aspect-square bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500">+{totalItems - 9}</div>
+                                <div className="text-xs text-gray-500">more</div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-gray-400 text-sm">No content yet</div>
-                        <div className="text-gray-400 text-xs mt-1">Add content to schedule this slot</div>
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {texts.length === 0 && media.length === 0 && (
+                      <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+                        <Package size={32} className="mb-2" />
+                        <p className="text-sm">No content yet. Add messages or media to get started!</p>
                       </div>
                     )}
                   </div>
