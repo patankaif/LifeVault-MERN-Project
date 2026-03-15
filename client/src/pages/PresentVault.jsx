@@ -821,7 +821,6 @@ export default function PresentVault() {
                     </div>
                   </div>
                   <CardDescription className="text-sm text-gray-600">{media.length} media, {texts.length} texts</CardDescription>
-                </CardHeader>
                   
                   {/* Scheduled Email Display */}
                   {slot.scheduledEmail && (
