@@ -239,32 +239,82 @@ export async function deleteUserAccount(userId, email, otp) {
     // Delete OTP after verification
     await db.collection('otps').deleteOne({ _id: otpRecord._id });
     
-    // Get all vaults for the user
+    console.log(`[Account Deletion] Starting deletion for user: ${email}`);
+
+    // Import file system utilities
+    const fs = await import('fs');
+    const path = await import('path');
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+
+    // 1. Get all slots before deletion to clean up media files
+    const userSlots = await db.collection('slots').find({ userId }).toArray();
+    const slotIds = userSlots.map(s => s._id);
+    let deletedFiles = 0;
+
+    // 2. Delete all media files from disk
+    for (const slot of userSlots) {
+      if (slot.media && slot.media.length > 0) {
+        for (const media of slot.media) {
+          if (media.url) {
+            try {
+              const urlParts = media.url.split('/');
+              const fileName = urlParts[urlParts.length - 1];
+              const filePath = path.join(uploadsDir, fileName);
+              
+              if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                deletedFiles++;
+                console.log(`[Account Deletion] Deleted file: ${fileName}`);
+              }
+            } catch (fileError) {
+              console.error(`[Account Deletion] Failed to delete file:`, fileError);
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Delete all slots in the vaults
+    const slotsResult = await db.collection('slots').deleteMany({ userId });
+    
+    // 4. Get all vaults for the user and delete them
     const vaults = await db.collection('vaults').find({ userId }).toArray();
     const vaultIds = vaults.map(v => v._id);
-    
-    // Delete all slots in the vaults
     if (vaultIds.length > 0) {
       await db.collection('slots').deleteMany({ vaultId: { $in: vaultIds } });
     }
+    const vaultsResult = await db.collection('vaults').deleteMany({ userId });
     
-    // Delete all scheduling records for the user's slots
-    const userSlots = await db.collection('slots').find({ userId }).toArray();
-    const slotIds = userSlots.map(s => s._id);
+    // 5. Delete all scheduling records for the user's slots
     if (slotIds.length > 0) {
       await db.collection('scheduling').deleteMany({ slotId: { $in: slotIds } });
     }
     
-    // Delete vaults
-    await db.collection('vaults').deleteMany({ userId });
+    // 6. Delete inactivity logs
+    const inactivityResult = await db.collection('inactivityLogs').deleteMany({ userId });
     
-    // Delete inactivity logs
-    await db.collection('inactivityLogs').deleteMany({ userId });
+    // 7. Delete the user
+    const userResult = await db.collection('users').deleteOne({ _id: userId });
     
-    // Delete the user
-    await db.collection('users').deleteOne({ _id: userId });
+    console.log(`[Account Deletion] Completed for user ${email}:`, {
+      slots: slotsResult.deletedCount,
+      vaults: vaultsResult.deletedCount,
+      files: deletedFiles,
+      inactivityLogs: inactivityResult.deletedCount,
+      userDeleted: userResult.deletedCount > 0
+    });
     
-    return { success: true, message: 'Account deleted successfully' };
+    return { 
+      success: true, 
+      message: 'Account deleted successfully',
+      deletedItems: {
+        slots: slotsResult.deletedCount,
+        vaults: vaultsResult.deletedCount,
+        mediaFiles: deletedFiles,
+        inactivityLogs: inactivityResult.deletedCount,
+        user: userResult.deletedCount > 0
+      }
+    };
   } catch (error) {
     console.error('[Auth] Failed to delete user account:', error);
     throw error;

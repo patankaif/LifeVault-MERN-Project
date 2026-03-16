@@ -114,9 +114,10 @@ export function AccountDeletionDialog({ children }) {
                 <strong>Warning:</strong> This will permanently delete:
                 <ul className="list-disc list-inside mt-2 text-sm">
                   <li>All your vaults and memory slots</li>
-                  <li>All uploaded media and text content</li>
+                  <li>All uploaded media files (photos and videos)</li>
+                  <li>All text content and messages</li>
                   <li>All scheduled deliveries</li>
-                  <li>Your account information</li>
+                  <li>Your account information and activity logs</li>
                 </ul>
                 This action cannot be reversed.
               </AlertDescription>
@@ -203,6 +204,8 @@ export function AccountDeletionDialog({ children }) {
                   <li>{deletionData?.slots || 0} memory slots</li>
                   <li>{deletionData?.vaults || 0} vaults</li>
                   <li>{deletionData?.schedulings || 0} scheduled deliveries</li>
+                  <li>{deletionData?.mediaFiles || 0} uploaded media files</li>
+                  <li>{deletionData?.inactivityLogs || 0} activity logs</li>
                   <li>Your account profile</li>
                 </ul>
               </AlertDescription>

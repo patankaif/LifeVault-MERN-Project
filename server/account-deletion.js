@@ -69,24 +69,64 @@ export async function verifyAndDeleteAccount(userId, otp) {
       slots: 0,
       vaults: 0,
       schedulings: 0,
+      inactivityLogs: 0,
+      mediaFiles: 0,
       user: false
     };
 
-    // 1. Delete all slots (this will also delete media and texts within slots)
+    // Import file system utilities
+    const fs = await import('fs');
+    const path = await import('path');
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+
+    // 1. Get all slots before deletion to clean up media files
+    const userSlots = await db.collection('slots').find({ userId }).toArray();
+    const slotIds = userSlots.map(s => s._id);
+
+    // 2. Delete all media files from disk
+    for (const slot of userSlots) {
+      if (slot.media && slot.media.length > 0) {
+        for (const media of slot.media) {
+          if (media.url) {
+            try {
+              const urlParts = media.url.split('/');
+              const fileName = urlParts[urlParts.length - 1];
+              const filePath = path.join(uploadsDir, fileName);
+              
+              if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                deletionResults.mediaFiles++;
+                console.log(`[Account Deletion] Deleted file: ${fileName}`);
+              }
+            } catch (fileError) {
+              console.error(`[Account Deletion] Failed to delete file:`, fileError);
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Delete all slots (this will also delete media and texts within slots)
     const slotsResult = await db.collection('slots').deleteMany({ userId });
     deletionResults.slots = slotsResult.deletedCount;
 
-    // 2. Delete all vaults
+    // 4. Delete all vaults
     const vaultsResult = await db.collection('vaults').deleteMany({ userId });
     deletionResults.vaults = vaultsResult.deletedCount;
 
-    // 3. Delete all schedulings
-    const schedulingsResult = await db.collection('scheduling').deleteMany({ 
-      slotId: { $in: slotsResult.deletedIds || [] } 
-    });
-    deletionResults.schedulings = schedulingsResult.deletedCount;
+    // 5. Delete all schedulings for the user's slots
+    if (slotIds.length > 0) {
+      const schedulingsResult = await db.collection('scheduling').deleteMany({ 
+        slotId: { $in: slotIds } 
+      });
+      deletionResults.schedulings = schedulingsResult.deletedCount;
+    }
 
-    // 4. Finally delete the user
+    // 6. Delete inactivity logs
+    const inactivityResult = await db.collection('inactivityLogs').deleteMany({ userId });
+    deletionResults.inactivityLogs = inactivityResult.deletedCount;
+
+    // 7. Finally delete the user
     const userResult = await db.collection('users').deleteOne({ _id: userId });
     deletionResults.user = userResult.deletedCount > 0;
 
