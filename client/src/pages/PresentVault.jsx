@@ -439,7 +439,6 @@ export default function PresentVault() {
                                       onLoad={() => console.log('Image loaded successfully:', m.url)}
                                       onError={(e) => {
                                         console.error('Image failed to load:', m.url, e);
-                                        e.target.style.backgroundColor = '#ff0000';
                                       }}
                                     />
                                     <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">
@@ -457,7 +456,6 @@ export default function PresentVault() {
                                       onMouseLeave={(e) => e.target.pause()}
                                       onError={(e) => {
                                         console.error('Video failed to load:', m.url, e);
-                                        e.target.style.backgroundColor = '#ff0000';
                                       }}
                                     />
                                     <div className="absolute top-2 right-2 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all flex items-center justify-center p-1 rounded-full opacity-0 group-hover:opacity-100">

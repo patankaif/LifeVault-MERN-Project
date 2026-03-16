@@ -356,7 +356,7 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
         console.log(`✅ File saved successfully: ${fileName} (${stats.size} bytes)`);
-        url = `${process.env.FRONTEND_URL || 'https://lifevault-api-cmmw.onrender.com'}/uploads/${fileName}`;
+        url = `/uploads/${fileName}`;
       } else {
         console.error('❌ File save failed!');
         return res.status(500).json({ success: false, message: 'Failed to save file' });
