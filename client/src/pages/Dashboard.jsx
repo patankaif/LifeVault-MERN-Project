@@ -448,25 +448,6 @@ export default function Dashboard() {
                   </Card>
                 </div>
 
-                {/* Quick Actions */}
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button className="p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all text-left group">
-                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-3 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                        <Plus size={20} />
-                      </div>
-                      <span className="text-sm font-bold text-slate-900">New Slot</span>
-                    </button>
-                    <button className="p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all text-left group">
-                      <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 mb-3 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        <Share2 size={20} />
-                      </div>
-                      <span className="text-sm font-bold text-slate-900">Share Vault</span>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Help Card */}
                 <Card className="border-none shadow-sm bg-gradient-to-br from-slate-800 to-slate-900 text-white overflow-hidden relative">
                   <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
