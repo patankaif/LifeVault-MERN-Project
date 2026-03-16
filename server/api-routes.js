@@ -185,6 +185,10 @@ router.post('/vaults/:type/slots', verifyToken, async (req, res) => {
     const { type } = req.params;
     const { slotName, parentSlotId } = req.body;
 
+    console.log('[Create Slot] Request body:', req.body);
+    console.log('[Create Slot] slotName:', slotName);
+    console.log('[Create Slot] parentSlotId:', parentSlotId);
+
     if (!slotName) {
       return res.status(400).json({ success: false, message: 'Slot name is required' });
     }

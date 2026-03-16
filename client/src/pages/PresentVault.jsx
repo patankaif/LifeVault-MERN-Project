@@ -78,12 +78,21 @@ export default function PresentVault() {
 
   const createSlot = async () => {
     if (!newSlotName.trim()) return;
+    
+    const requestBody = { slotName: newSlotName };
+    console.log('[Create Slot Client] Sending request body:', requestBody);
+    
     try {
       const response = await authFetch('/api/vaults/present/slots', {
         method: 'POST',
-        body: JSON.stringify({ slotName: newSlotName }),
+        body: JSON.stringify(requestBody),
       });
+      
+      console.log('[Create Slot Client] Response status:', response.status);
+      
       const data = await response.json();
+      console.log('[Create Slot Client] Response data:', data);
+      
       if (data.success) {
         setSlots([...slots, data.slot]);
         setNewSlotName('');
