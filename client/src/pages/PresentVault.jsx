@@ -81,7 +81,7 @@ export default function PresentVault() {
     try {
       const response = await authFetch('/api/vaults/present/slots', {
         method: 'POST',
-        body: JSON.stringify({ name: newSlotName }),
+        body: JSON.stringify({ slotName: newSlotName }),
       });
       const data = await response.json();
       if (data.success) {
