@@ -34,26 +34,69 @@ export default function Dashboard() {
 
   // Fetch dashboard data
   useEffect(() => {
-    fetchNextScheduled();
+    fetchNextScheduledAndStats();
     fetchInactivityStatus();
-    // Mock stats for now - in a real app, these would come from an API
-    setStats({
-      totalMemories: 12,
-      deliveredMemories: 5,
-      activeVaults: 3,
-      daysUntilNext: 4
-    });
   }, []);
 
-  const fetchNextScheduled = async () => {
+  const fetchNextScheduledAndStats = async () => {
     try {
-      const response = await authFetch('/api/next-scheduled');
-      const data = await response.json();
-      if (data.success) {
-        setNextScheduled(data.scheduling);
+      // Fetch Next Scheduled
+      const nextResponse = await authFetch('/api/next-scheduled');
+      const nextData = await nextResponse.json();
+      
+      let daysUntilNext = 0;
+      if (nextData.success && nextData.scheduling) {
+        setNextScheduled(nextData.scheduling);
+        const scheduledDate = new Date(nextData.scheduling.scheduledDate);
+        const now = new Date();
+        const diffTime = scheduledDate - now;
+        daysUntilNext = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (daysUntilNext < 0) daysUntilNext = 0;
+      } else {
+        setNextScheduled(null);
       }
+
+      // Fetch memory counts
+      const [futureRes, presentRes] = await Promise.all([
+        authFetch('/api/vaults/future/slots'),
+        authFetch('/api/vaults/present/slots')
+      ]);
+      
+      const futureData = await futureRes.json();
+      const presentData = await presentRes.json();
+      
+      const futureSlots = futureData.success ? (futureData.slots || []) : [];
+      const presentSlots = presentData.success ? (presentData.slots || []) : [];
+      
+      const allSlots = [...futureSlots, ...presentSlots];
+      
+      let textCount = 0, imageCount = 0, videoCount = 0;
+      let deliveredMemories = 0;
+      
+      allSlots.forEach(slot => {
+        if (slot.texts) textCount += slot.texts.length;
+        if (slot.media) {
+          slot.media.forEach(media => {
+            if (media.type === 'image') imageCount++;
+            else if (media.type === 'video') videoCount++;
+          });
+        }
+        if (slot.scheduledDate && slot.delivered) {
+          deliveredMemories++;
+        }
+      });
+      
+      const totalMemories = textCount + imageCount + videoCount;
+
+      setStats({
+        totalMemories,
+        deliveredMemories,
+        activeVaults: 3, // Fixed to 3 based on structure: Present, Future, Death
+        daysUntilNext: daysUntilNext > 0 ? daysUntilNext : (nextData.scheduling ? 0 : '--')
+      });
+
     } catch (err) {
-      console.error('Failed to fetch next scheduled:', err);
+      console.error('Failed to fetch stats:', err);
     }
   };
 
@@ -211,7 +254,7 @@ export default function Dashboard() {
                       <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                         <Share2 size={20} />
                       </div>
-                      <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+2 this month</span>
+                      <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">All Vaults</span>
                     </div>
                     <p className="text-sm font-medium text-slate-500">Total Memories</p>
                     <h3 className="text-2xl font-bold text-slate-900 mt-1">{stats.totalMemories}</h3>
@@ -226,7 +269,7 @@ export default function Dashboard() {
                       <div className="p-2 bg-green-50 rounded-lg text-green-600">
                         <Target size={20} />
                       </div>
-                      <span className="text-xs font-medium text-slate-400">82% success rate</span>
+                      <span className="text-xs font-medium text-slate-400">All Time</span>
                     </div>
                     <p className="text-sm font-medium text-slate-500">Delivered</p>
                     <h3 className="text-2xl font-bold text-slate-900 mt-1">{stats.deliveredMemories}</h3>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { trpc } from '@/lib/trpc';
+import { authFetch } from '@/lib/authFetch';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -22,18 +23,29 @@ export function AccountDeletionDialog({ children }) {
   const [isLoading, setIsLoading] = useState(false);
   const [deletionData, setDeletionData] = useState(null);
 
-  const sendDeletionOTPMutation = trpc.account.sendDeletionOTP.useMutation();
-  const verifyAndDeleteMutation = trpc.account.verifyAndDelete.useMutation();
-  const checkStatusQuery = trpc.account.checkDeletionStatus.useQuery(undefined, {
-    enabled: false,
-  });
+  const { user, logout } = useAuth();
 
   const handleSendOTP = async () => {
+    if (!user?.email) {
+      setError('User email not found. Please relogin.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     
     try {
-      await sendDeletionOTPMutation.mutateAsync();
+      const response = await authFetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      });
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to send OTP');
+      }
+
       setStep('otp');
     } catch (err) {
       setError(err.message || 'Failed to send OTP');
@@ -52,8 +64,18 @@ export function AccountDeletionDialog({ children }) {
     setError('');
     
     try {
-      const result = await verifyAndDeleteMutation.mutateAsync(otp);
-      setDeletionData(result.deletedItems);
+      const response = await authFetch('/api/auth/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp })
+      });
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to delete account');
+      }
+
+      setDeletionData(data.deletedItems);
       setStep('success');
     } catch (err) {
       setError(err.message || 'Invalid OTP');
@@ -64,7 +86,8 @@ export function AccountDeletionDialog({ children }) {
 
   const handleClose = () => {
     if (step === 'success') {
-      // Redirect to login or home page after successful deletion
+      // Logout and clear tokens
+      logout();
       window.location.href = '/';
     } else {
       setOpen(false);
@@ -75,7 +98,13 @@ export function AccountDeletionDialog({ children }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (isOpen) {
+        setOpen(true);
+      } else {
+        handleClose();
+      }
+    }}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
