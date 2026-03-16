@@ -705,27 +705,52 @@ export default function FutureVault() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Future Vault</h1>
-            <p className="text-gray-600">Schedule memories up to 9 months in advance</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <Button onClick={() => navigate('/dashboard')} variant="outline" className="text-slate-500 hover:text-slate-900">
+              <ArrowLeft size={20} className="mr-2" /> Back to Dashboard
+            </Button>
           </div>
-          <Button onClick={() => navigate('/dashboard')} variant="outline">Back</Button>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Future Vault</h1>
+          <p className="text-gray-600">Schedule memories up to 9 months in advance</p>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <Card className="mb-8">
-          <CardHeader><CardTitle>Create New Slot</CardTitle></CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input placeholder="Slot name..." value={newSlotName} onChange={e => setNewSlotName(e.target.value)} />
-              <Button onClick={createSlot}><Plus size={18} className="mr-2" />Add Slot</Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Add Slot Button */}
+        <div className="mb-6">
+          <AnimatedButton 
+            onClick={() => setShowAddSlot(!showAddSlot)}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3"
+          >
+            <Plus size={20} className="mr-2" />
+            Create New Memory
+          </AnimatedButton>
+        </div>
+
+        {/* Add Slot Form */}
+        {showAddSlot && (
+          <Card className="mb-6 border-none shadow-xl bg-white ring-1 ring-slate-200">
+            <CardHeader className="border-b border-slate-50">
+              <CardTitle className="text-lg">Create Future Memory</CardTitle>
+              <CardDescription>Schedule a memory to be delivered later</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Memory name..." 
+                  value={newSlotName} 
+                  onChange={e => setNewSlotName(e.target.value)} 
+                  className="flex-1"
+                />
+                <AnimatedButton onClick={createSlot}>
+                  <Plus size={18} className="mr-2" />Add
+                </AnimatedButton>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {error && (
           <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-3 text-sm font-medium">
@@ -1258,6 +1283,21 @@ export default function FutureVault() {
             </Card>
           </div>
         )}
+
+        {/* Info Card */}
+        <Card className="mt-16 border-none shadow-sm bg-emerald-50/50 border border-emerald-100">
+          <CardContent className="p-6 flex items-start gap-4">
+            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+              <Info size={20} />
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-900">About Future Vault</h4>
+              <p className="text-sm text-emerald-700 mt-1 leading-relaxed">
+                The Future Vault is designed for long-term planning. You can schedule messages, photos, and videos to be delivered to your loved ones up to 9 months from today. This is perfect for birthdays, anniversaries, or milestone celebrations you want to be part of.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
