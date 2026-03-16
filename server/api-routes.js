@@ -525,4 +525,26 @@ router.post('/auth/delete-account', verifyToken, async (req, res) => {
   }
 });
 
+// ==================== MAINTENANCE ROUTES ====================
+
+// Clean up orphaned files
+router.post('/maintenance/cleanup-files', verifyToken, async (req, res) => {
+  try {
+    const result = await vaultUtils.cleanupOrphanedFiles();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Verify media integrity
+router.get('/maintenance/verify-media', verifyToken, async (req, res) => {
+  try {
+    const result = await vaultUtils.verifyMediaIntegrity();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default router;

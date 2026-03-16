@@ -135,10 +135,39 @@ export async function deleteSlot(slotId, vaultType) {
   try {
     const db = await getDB();
 
-    // Get the slot to check if it has children
+    // Get the slot to check if it has children and media
     const slot = await db.collection('slots').findOne({ _id: slotId });
     if (!slot) {
       return { success: false, message: 'Slot not found' };
+    }
+
+    // Clean up all media files for this slot
+    if (slot.media && slot.media.length > 0) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        
+        for (const media of slot.media) {
+          if (media.url) {
+            // Extract filename from URL
+            const urlParts = media.url.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const filePath = path.join(uploadsDir, fileName);
+            
+            // Delete file if it exists
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log(`[Cleanup] Deleted file for slot ${slotId}: ${fileName}`);
+            } else {
+              console.log(`[Cleanup] File not found for slot ${slotId}: ${fileName}`);
+            }
+          }
+        }
+      } catch (fileError) {
+        console.error('[Cleanup] Failed to delete some files for slot:', slotId, fileError);
+        // Continue with slot deletion even if file cleanup fails
+      }
     }
 
     // For Death Vault, allow deletion of slots
@@ -166,6 +195,44 @@ export async function deleteMediaFromSlot(slotId, mediaId) {
   try {
     const db = await getDB();
 
+    // First, get the slot to find the media URL before deleting it
+    const slot = await db.collection('slots').findOne({ _id: slotId });
+    if (!slot) {
+      throw new Error('Slot not found');
+    }
+
+    // Find the specific media to get its URL
+    const mediaToDelete = slot.media?.find(m => m._id === mediaId);
+    if (!mediaToDelete) {
+      throw new Error('Media not found');
+    }
+
+    // Delete the physical file from disk
+    if (mediaToDelete.url) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        // Extract filename from URL
+        const urlParts = mediaToDelete.url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        const filePath = path.join(uploadsDir, fileName);
+        
+        // Delete file if it exists
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`[Cleanup] Deleted file: ${fileName}`);
+        } else {
+          console.log(`[Cleanup] File not found: ${fileName}`);
+        }
+      } catch (fileError) {
+        console.error('[Cleanup] Failed to delete file:', fileError);
+        // Continue with database deletion even if file deletion fails
+      }
+    }
+
+    // Remove media reference from database
     await db.collection('slots').updateOne(
       { _id: slotId },
       { $pull: { media: { _id: mediaId } }, $set: { updatedAt: new Date() } }
@@ -446,6 +513,115 @@ export async function updateSlotName(slotId, slotName) {
   }
 }
 
+// Utility function to clean up orphaned files (files not referenced in database)
+export async function cleanupOrphanedFiles() {
+  try {
+    const db = await getDB();
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    
+    // Get all files in uploads directory
+    if (!fs.existsSync(uploadsDir)) {
+      console.log('[Cleanup] Uploads directory does not exist');
+      return { success: true, message: 'No uploads directory to clean' };
+    }
+    
+    const allFiles = fs.readdirSync(uploadsDir);
+    
+    // Get all media URLs from database
+    const allSlots = await db.collection('slots').find({}).toArray();
+    const allMediaUrls = new Set();
+    
+    for (const slot of allSlots) {
+      if (slot.media) {
+        for (const media of slot.media) {
+          if (media.url) {
+            const urlParts = media.url.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            allMediaUrls.add(fileName);
+          }
+        }
+      }
+    }
+    
+    // Delete orphaned files
+    let deletedCount = 0;
+    for (const file of allFiles) {
+      if (!allMediaUrls.has(file)) {
+        const filePath = path.join(uploadsDir, file);
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`[Cleanup] Deleted orphaned file: ${file}`);
+          deletedCount++;
+        } catch (error) {
+          console.error(`[Cleanup] Failed to delete orphaned file ${file}:`, error);
+        }
+      }
+    }
+    
+    return { 
+      success: true, 
+      message: `Cleaned up ${deletedCount} orphaned files`,
+      deletedCount,
+      totalFiles: allFiles.length,
+      referencedFiles: allMediaUrls.size
+    };
+  } catch (error) {
+    console.error('[Cleanup] Failed to cleanup orphaned files:', error);
+    throw error;
+  }
+}
+
+// Utility function to verify media integrity (check if database references have actual files)
+export async function verifyMediaIntegrity() {
+  try {
+    const db = await getDB();
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    const allSlots = await db.collection('slots').find({}).toArray();
+    
+    let missingFiles = [];
+    let totalMedia = 0;
+    
+    for (const slot of allSlots) {
+      if (slot.media) {
+        for (const media of slot.media) {
+          totalMedia++;
+          if (media.url) {
+            const urlParts = media.url.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            const filePath = path.join(uploadsDir, fileName);
+            
+            if (!fs.existsSync(filePath)) {
+              missingFiles.push({
+                slotId: slot._id,
+                slotName: slot.name,
+                mediaId: media._id,
+                fileName,
+                url: media.url
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    return {
+      success: true,
+      totalMedia,
+      missingFiles: missingFiles.length,
+      missingFileDetails: missingFiles
+    };
+  } catch (error) {
+    console.error('[Integrity] Failed to verify media integrity:', error);
+    throw error;
+  }
+}
+
 export default {
   getVault,
   createSlot,
@@ -462,4 +638,6 @@ export default {
   getDeliveryStatus,
   sendScheduledSlots,
   getSharedSlot,
+  cleanupOrphanedFiles,
+  verifyMediaIntegrity,
 };
