@@ -350,13 +350,14 @@ export default function Home() {
       <Dialog open={showDemo} onOpenChange={setShowDemo}>
         <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-black border-none">
           <div className="aspect-video w-full relative">
-            <iframe 
+            <video 
               className="w-full h-full"
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
-              title="Life Vault Demo"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowFullScreen
-            ></iframe>
+              controls
+              autoPlay
+              src="/demo.mp4"
+            >
+              Your browser does not support the video tag.
+            </video>
           </div>
         </DialogContent>
       </Dialog>
