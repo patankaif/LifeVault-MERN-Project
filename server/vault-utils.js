@@ -144,21 +144,21 @@ export async function deleteSlot(slotId, vaultType) {
     // Clean up all media files for this slot
     if (slot.media && slot.media.length > 0) {
       try {
-        const s3Storage = await import('./s3-storage.js');
+        const gridfsStorage = await import('./gridfs-storage.js');
         
         for (const media of slot.media) {
-          if (media.url && media.url.includes('s3.')) {
-            // Delete file from S3
-            const deleted = await s3Storage.deleteFileFromS3(media.url);
+          if (media.url && media.url.startsWith('/api/media/')) {
+            // Delete file from GridFS
+            const deleted = await gridfsStorage.deleteFileFromGridFS(media.url);
             if (deleted) {
-              console.log(`[Cleanup] Deleted S3 file for slot ${slotId}: ${media.url}`);
+              console.log(`[Cleanup] Deleted GridFS file for slot ${slotId}: ${media.url}`);
             } else {
-              console.log(`[Cleanup] Failed to delete S3 file for slot ${slotId}: ${media.url}`);
+              console.log(`[Cleanup] Failed to delete GridFS file for slot ${slotId}: ${media.url}`);
             }
           }
         }
       } catch (fileError) {
-        console.error('[Cleanup] Failed to delete some S3 files for slot:', slotId, fileError);
+        console.error('[Cleanup] Failed to delete some GridFS files for slot:', slotId, fileError);
         // Continue with slot deletion even if file cleanup fails
       }
     }
@@ -200,19 +200,19 @@ export async function deleteMediaFromSlot(slotId, mediaId) {
       throw new Error('Media not found');
     }
 
-    // Delete the file from S3
-    if (mediaToDelete.url && mediaToDelete.url.includes('s3.')) {
+    // Delete the file from GridFS
+    if (mediaToDelete.url && mediaToDelete.url.startsWith('/api/media/')) {
       try {
-        const s3Storage = await import('./s3-storage.js');
+        const gridfsStorage = await import('./gridfs-storage.js');
         
-        const deleted = await s3Storage.deleteFileFromS3(mediaToDelete.url);
+        const deleted = await gridfsStorage.deleteFileFromGridFS(mediaToDelete.url);
         if (deleted) {
-          console.log(`[Cleanup] Deleted S3 file: ${mediaToDelete.url}`);
+          console.log(`[Cleanup] Deleted GridFS file: ${mediaToDelete.url}`);
         } else {
-          console.log(`[Cleanup] Failed to delete S3 file: ${mediaToDelete.url}`);
+          console.log(`[Cleanup] Failed to delete GridFS file: ${mediaToDelete.url}`);
         }
       } catch (fileError) {
-        console.error('[Cleanup] Failed to delete S3 file:', fileError);
+        console.error('[Cleanup] Failed to delete GridFS file:', fileError);
         // Continue with database deletion even if file deletion fails
       }
     }

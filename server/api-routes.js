@@ -1,4 +1,5 @@
 import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { storagePut, storageGet } from './storage.ts';
 import * as authUtils from './auth-utils.js';
 import * as vaultUtils from './vault-utils.js';
@@ -353,30 +354,14 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       
       const fileName = `${mediaType === 'image' ? 'image' : 'video'}.${mimeType.split('/')[1] || 'bin'}`;
       
-      console.log(`[Upload] Uploading ${mimeType} to S3...`);
-      url = await s3Storage.uploadFileToS3(fileBuffer, fileName, mimeType);
+      console.log(`[Upload] Uploading ${mimeType} to MongoDB GridFS...`);
+      const gridfsStorage = await import('./gridfs-storage.js');
+      url = await gridfsStorage.uploadFileToGridFS(fileBuffer, fileName, mimeType);
       
-      if (url) {
-        console.log(`✅ File uploaded to S3 successfully: ${url}`);
-      } else {
-        console.warn(`⚠️ S3 Upload failed or configured incorrectly. Falling back to local storage.`);
-        const fs = await import('fs');
-        const path = await import('path');
-        const uploadsDir = path.join(process.cwd(), 'uploads');
-        const localFileName = `${Date.now()}-${uuidv4().substring(0,8)}.${fileName.split('.').pop()}`;
-        const filePath = path.join(uploadsDir, localFileName);
-        
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        
-        fs.writeFileSync(filePath, fileBuffer);
-        url = `/uploads/${localFileName}`;
-        console.log(`✅ File saved locally: ${url}`);
-      }
+      console.log(`✅ File uploaded to MongoDB successfully: ${url}`);
     } catch (error) {
       console.error('[Upload] File upload failed:', error);
-      return res.status(500).json({ success: false, message: 'Failed to upload file' });
+      return res.status(500).json({ success: false, message: 'Failed to upload file to database' });
     }
 
     // Add to slot
@@ -387,6 +372,18 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('[Upload] Media upload error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Upload failed' });
+  }
+});
+
+// Serve media from GridFS
+router.get('/media/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const gridfsStorage = await import('./gridfs-storage.js');
+    await gridfsStorage.streamFileFromGridFS(fileId, res);
+  } catch (error) {
+    console.error('[Serve Media] Error serving file:', error);
+    res.status(500).send('Error serving file');
   }
 });
 
