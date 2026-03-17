@@ -1,5 +1,5 @@
 import express from 'express';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { storagePut, storageGet } from './storage.ts';
 import * as authUtils from './auth-utils.js';
 import * as vaultUtils from './vault-utils.js';
@@ -336,9 +336,6 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
     let url;
     
     try {
-      // Use AWS S3 for persistent storage
-      const s3Storage = await import('./s3-storage.js');
-      
       // Determine the mime type
       let mimeType = mediaType === 'image' ? 'image/jpeg' : 'video/mp4';
       if (file.startsWith('data:')) {
