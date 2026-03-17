@@ -21,7 +21,8 @@ const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
  */
 export async function uploadFileToS3(fileBuffer, originalFileName, mimeType) {
   if (!BUCKET_NAME) {
-    throw new Error('AWS_S3_BUCKET_NAME environment variable is missing.');
+    console.warn('[S3 Storage] AWS_S3_BUCKET_NAME environment variable is missing.');
+    return null; // Signal fallback
   }
 
   // Generate a unique filename to prevent collisions
@@ -50,7 +51,7 @@ export async function uploadFileToS3(fileBuffer, originalFileName, mimeType) {
     return publicUrl;
   } catch (error) {
     console.error('[S3 Storage] Failed to upload file to S3:', error);
-    throw error;
+    return null; // Signal fallback on upload failure
   }
 }
 
@@ -60,12 +61,9 @@ export async function uploadFileToS3(fileBuffer, originalFileName, mimeType) {
  * @returns {Promise<boolean>} - True if successful, false otherwise
  */
 export async function deleteFileFromS3(fileUrl) {
-  if (!BUCKET_NAME) {
-    console.warn('[S3 Storage] AWS_S3_BUCKET_NAME missing, cannot delete from S3.');
+  if (!BUCKET_NAME || !fileUrl || !fileUrl.includes('.amazonaws.com')) {
     return false;
   }
-  
-  if (!fileUrl) return false;
 
   try {
     // Extract the object key from the URL

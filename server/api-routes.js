@@ -356,10 +356,27 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
       console.log(`[Upload] Uploading ${mimeType} to S3...`);
       url = await s3Storage.uploadFileToS3(fileBuffer, fileName, mimeType);
       
-      console.log(`✅ File uploaded to S3 successfully: ${url}`);
+      if (url) {
+        console.log(`✅ File uploaded to S3 successfully: ${url}`);
+      } else {
+        console.warn(`⚠️ S3 Upload failed or configured incorrectly. Falling back to local storage.`);
+        const fs = await import('fs');
+        const path = await import('path');
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        const localFileName = `${Date.now()}-${uuidv4().substring(0,8)}.${fileName.split('.').pop()}`;
+        const filePath = path.join(uploadsDir, localFileName);
+        
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        fs.writeFileSync(filePath, fileBuffer);
+        url = `/uploads/${localFileName}`;
+        console.log(`✅ File saved locally: ${url}`);
+      }
     } catch (error) {
-      console.error('[Upload] File upload to S3 failed:', error);
-      return res.status(500).json({ success: false, message: 'Failed to upload to S3' });
+      console.error('[Upload] File upload failed:', error);
+      return res.status(500).json({ success: false, message: 'Failed to upload file' });
     }
 
     // Add to slot
