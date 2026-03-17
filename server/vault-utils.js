@@ -144,28 +144,21 @@ export async function deleteSlot(slotId, vaultType) {
     // Clean up all media files for this slot
     if (slot.media && slot.media.length > 0) {
       try {
-        const fs = await import('fs');
-        const path = await import('path');
-        const uploadsDir = path.join(process.cwd(), 'uploads');
+        const s3Storage = await import('./s3-storage.js');
         
         for (const media of slot.media) {
-          if (media.url) {
-            // Extract filename from URL
-            const urlParts = media.url.split('/');
-            const fileName = urlParts[urlParts.length - 1];
-            const filePath = path.join(uploadsDir, fileName);
-            
-            // Delete file if it exists
-            if (fs.existsSync(filePath)) {
-              fs.unlinkSync(filePath);
-              console.log(`[Cleanup] Deleted file for slot ${slotId}: ${fileName}`);
+          if (media.url && media.url.includes('s3.')) {
+            // Delete file from S3
+            const deleted = await s3Storage.deleteFileFromS3(media.url);
+            if (deleted) {
+              console.log(`[Cleanup] Deleted S3 file for slot ${slotId}: ${media.url}`);
             } else {
-              console.log(`[Cleanup] File not found for slot ${slotId}: ${fileName}`);
+              console.log(`[Cleanup] Failed to delete S3 file for slot ${slotId}: ${media.url}`);
             }
           }
         }
       } catch (fileError) {
-        console.error('[Cleanup] Failed to delete some files for slot:', slotId, fileError);
+        console.error('[Cleanup] Failed to delete some S3 files for slot:', slotId, fileError);
         // Continue with slot deletion even if file cleanup fails
       }
     }
@@ -207,27 +200,19 @@ export async function deleteMediaFromSlot(slotId, mediaId) {
       throw new Error('Media not found');
     }
 
-    // Delete the physical file from disk
-    if (mediaToDelete.url) {
+    // Delete the file from S3
+    if (mediaToDelete.url && mediaToDelete.url.includes('s3.')) {
       try {
-        const fs = await import('fs');
-        const path = await import('path');
+        const s3Storage = await import('./s3-storage.js');
         
-        // Extract filename from URL
-        const urlParts = mediaToDelete.url.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        const uploadsDir = path.join(process.cwd(), 'uploads');
-        const filePath = path.join(uploadsDir, fileName);
-        
-        // Delete file if it exists
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`[Cleanup] Deleted file: ${fileName}`);
+        const deleted = await s3Storage.deleteFileFromS3(mediaToDelete.url);
+        if (deleted) {
+          console.log(`[Cleanup] Deleted S3 file: ${mediaToDelete.url}`);
         } else {
-          console.log(`[Cleanup] File not found: ${fileName}`);
+          console.log(`[Cleanup] Failed to delete S3 file: ${mediaToDelete.url}`);
         }
       } catch (fileError) {
-        console.error('[Cleanup] Failed to delete file:', fileError);
+        console.error('[Cleanup] Failed to delete S3 file:', fileError);
         // Continue with database deletion even if file deletion fails
       }
     }

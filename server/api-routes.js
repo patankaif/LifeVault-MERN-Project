@@ -335,35 +335,31 @@ router.post('/slots/:slotId/media', verifyToken, async (req, res) => {
     let url;
     
     try {
-      // Use local storage directly (more reliable for Render)
-      const fs = await import('fs');
-      const path = await import('path');
+      // Use AWS S3 for persistent storage
+      const s3Storage = await import('./s3-storage.js');
       
-      const fileBuffer = Buffer.from(file, 'base64');
-      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${mediaType === 'image' ? 'jpg' : 'mp4'}`;
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      const filePath = path.join(uploadsDir, fileName);
-      
-      // Ensure uploads directory exists
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-        console.log('[Upload] Created uploads directory');
+      // Determine the mime type
+      let mimeType = mediaType === 'image' ? 'image/jpeg' : 'video/mp4';
+      if (file.startsWith('data:')) {
+        // Extract the mime type from the data URL if present
+        const match = file.match(/^data:([^;]+);/);
+        if (match) mimeType = match[1];
       }
+
+      // Convert base64 data to buffer using base64-js or native Buffer
+      // We need to strip the data:image/jpeg;base64, prefix if it exists
+      const base64Data = file.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+      const fileBuffer = Buffer.from(base64Data, 'base64');
       
-      fs.writeFileSync(filePath, fileBuffer);
+      const fileName = `${mediaType === 'image' ? 'image' : 'video'}.${mimeType.split('/')[1] || 'bin'}`;
       
-      // Verify file was written
-      if (fs.existsSync(filePath)) {
-        const stats = fs.statSync(filePath);
-        console.log(`✅ File saved successfully: ${fileName} (${stats.size} bytes)`);
-        url = `/uploads/${fileName}`;
-      } else {
-        console.error('❌ File save failed!');
-        return res.status(500).json({ success: false, message: 'Failed to save file' });
-      }
+      console.log(`[Upload] Uploading ${mimeType} to S3...`);
+      url = await s3Storage.uploadFileToS3(fileBuffer, fileName, mimeType);
+      
+      console.log(`✅ File uploaded to S3 successfully: ${url}`);
     } catch (error) {
-      console.error('[Upload] File upload failed:', error);
-      return res.status(500).json({ success: false, message: 'Failed to save file' });
+      console.error('[Upload] File upload to S3 failed:', error);
+      return res.status(500).json({ success: false, message: 'Failed to upload to S3' });
     }
 
     // Add to slot
