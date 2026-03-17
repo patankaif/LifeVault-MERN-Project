@@ -191,7 +191,7 @@ export default function Dashboard() {
               </div>
               
               <div className="hidden lg:block">
-                <h2 className="text-lg font-semibold text-slate-800">Welcome back, {user?.name?.split(' ')[0]}!</h2>
+                <h2 className="text-lg font-semibold text-slate-800">Hello, {user?.name?.split(' ')[0]}! Welcome to your Life Vault.</h2>
               </div>
 
               <div className="flex items-center gap-4">
@@ -320,7 +320,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Present Vault */}
                   <motion.div whileHover={{ y: -4 }} className="cursor-pointer" onClick={() => navigate('/present-vault')}>
-                    <Card className="border border-slate-200/50 hover:border-emerald-500 shadow-sm bg-white overflow-hidden group transition-all duration-300">
+                    <Card className="border-2 border-slate-100 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/5 bg-white overflow-hidden group transition-all duration-300">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
@@ -351,7 +351,7 @@ export default function Dashboard() {
 
                   {/* Future Vault */}
                   <motion.div whileHover={{ y: -4 }} className="cursor-pointer" onClick={() => navigate('/future-vault')}>
-                    <Card className="border border-slate-200/50 hover:border-blue-500 shadow-sm bg-white overflow-hidden group transition-all duration-300">
+                    <Card className="border-2 border-slate-100 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/5 bg-white overflow-hidden group transition-all duration-300">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
@@ -382,7 +382,7 @@ export default function Dashboard() {
 
                   {/* Death Vault */}
                   <motion.div whileHover={{ y: -4 }} className="cursor-pointer md:col-span-2" onClick={() => navigate('/death-vault')}>
-                    <Card className="border border-slate-200/50 hover:border-rose-500 shadow-sm bg-white overflow-hidden group transition-all duration-300">
+                    <Card className="border-2 border-slate-100 hover:border-rose-500 hover:shadow-lg hover:shadow-rose-500/5 bg-white overflow-hidden group transition-all duration-300">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="p-2 bg-rose-50 rounded-lg text-rose-600">
