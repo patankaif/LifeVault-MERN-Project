@@ -9,10 +9,12 @@ import {
   Play, Zap, Globe, MessageSquare
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export default function Home() {
   const [, navigate] = useLocation();
   const { isAuthenticated } = useAuth();
+  const [showDemo, setShowDemo] = React.useState(false);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -73,8 +75,8 @@ export default function Home() {
                 <Button size="lg" onClick={() => navigate('/signup')} className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-7 shadow-xl shadow-blue-100 group">
                   Start Your Vault <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-7 border-slate-200 hover:bg-slate-50">
-                  <Play className="mr-2 fill-current" size={18} /> Watch Demo
+                <Button size="lg" variant="outline" className="text-lg px-8 py-7 border-slate-200 hover:bg-slate-50" onClick={() => setShowDemo(true)}>
+                  <Play className="mr-2 fill-current" size={18} /> Live Demo
                 </Button>
               </div>
               <div className="mt-12 flex items-center gap-6">
@@ -344,6 +346,20 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <Dialog open={showDemo} onOpenChange={setShowDemo}>
+        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-black border-none">
+          <div className="aspect-video w-full relative">
+            <iframe 
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
+              title="Life Vault Demo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+            ></iframe>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

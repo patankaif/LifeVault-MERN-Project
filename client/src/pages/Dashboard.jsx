@@ -11,7 +11,8 @@ import {
   Zap, Target, Flame, Shield, Heart, Share2, Bell,
   ChevronRight, Plus, Settings, HelpCircle
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
@@ -24,6 +25,7 @@ export default function Dashboard() {
     activeVaults: 3,
     daysUntilNext: 0
   });
+  const [showDemo, setShowDemo] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -175,7 +177,10 @@ export default function Dashboard() {
           </nav>
 
           <div className="mt-auto pt-6 border-t border-slate-100">
-            <Button variant="ghost" className="w-full justify-start gap-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={logout}>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => {
+              logout();
+              window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+            }}>
               <LogOut size={20} /> Logout
             </Button>
           </div>
@@ -454,8 +459,8 @@ export default function Dashboard() {
                     <p className="text-sm text-slate-400 mb-6">
                       Learn how to set up your digital legacy and ensure your memories live on.
                     </p>
-                    <Button className="w-full bg-white text-slate-900 hover:bg-slate-100">
-                      View Guide
+                    <Button className="w-full bg-white text-slate-900 hover:bg-slate-100" onClick={() => setShowDemo(true)}>
+                      Live Demo
                     </Button>
                   </CardContent>
                 </Card>
@@ -464,6 +469,20 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
+
+      <Dialog open={showDemo} onOpenChange={setShowDemo}>
+        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-black border-none">
+          <div className="aspect-video w-full relative">
+            <iframe 
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
+              title="Life Vault Demo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+            ></iframe>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
