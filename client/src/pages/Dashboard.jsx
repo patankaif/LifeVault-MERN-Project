@@ -320,8 +320,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Present Vault */}
                   <motion.div whileHover={{ y: -4 }} className="cursor-pointer" onClick={() => navigate('/present-vault')}>
-                    <Card className="border-none shadow-sm bg-white overflow-hidden group">
-                      <div className="h-2 bg-emerald-500"></div>
+                    <Card className="border border-slate-200/50 hover:border-emerald-500 shadow-sm bg-white overflow-hidden group transition-all duration-300">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
@@ -352,8 +351,7 @@ export default function Dashboard() {
 
                   {/* Future Vault */}
                   <motion.div whileHover={{ y: -4 }} className="cursor-pointer" onClick={() => navigate('/future-vault')}>
-                    <Card className="border-none shadow-sm bg-white overflow-hidden group">
-                      <div className="h-2 bg-blue-500"></div>
+                    <Card className="border border-slate-200/50 hover:border-blue-500 shadow-sm bg-white overflow-hidden group transition-all duration-300">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
@@ -384,8 +382,7 @@ export default function Dashboard() {
 
                   {/* Death Vault */}
                   <motion.div whileHover={{ y: -4 }} className="cursor-pointer md:col-span-2" onClick={() => navigate('/death-vault')}>
-                    <Card className="border-none shadow-sm bg-white overflow-hidden group">
-                      <div className="h-2 bg-rose-500"></div>
+                    <Card className="border border-slate-200/50 hover:border-rose-500 shadow-sm bg-white overflow-hidden group transition-all duration-300">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="p-2 bg-rose-50 rounded-lg text-rose-600">
