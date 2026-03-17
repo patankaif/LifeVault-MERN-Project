@@ -9,7 +9,7 @@ import {
   LogOut, Clock, User, Trash2, Calendar, TrendingUp, 
   Award, BarChart3, Sun, Moon, Layout, Grid, List,
   Zap, Target, Flame, Shield, Heart, Share2, Bell,
-  ChevronRight, Plus, Settings, HelpCircle, Menu
+  ChevronRight, Plus, Settings, HelpCircle, Menu, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';

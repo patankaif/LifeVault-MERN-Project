@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { AccountDeletionDialog } from '@/components/account-deletion/AccountDeletionDialog';
 import { User, Mail, Calendar, Shield, Settings, Trash2, AlertTriangle, Phone, Globe, Bell, CheckCircle2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
