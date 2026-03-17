@@ -10,9 +10,10 @@ import {
   User, Mail, Shield, Bell, Clock, LogOut, 
   ArrowLeft, CheckCircle2, AlertCircle, Loader2,
   Settings, Lock, Key, Globe, Heart, Archive,
-  FileText, Image as ImageIcon, Video, Send, Target, Star
+  FileText, Image as ImageIcon, Video, Send, Target, Star, Layout, Calendar, Menu
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -157,37 +158,128 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                My Profile
-              </h1>
+    <div className="min-h-screen bg-[#f8fafc]">
+      <div className="flex">
+        {/* Persistent Sidebar */}
+        <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 bg-white border-r border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-10" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+              <Shield className="text-white" size={24} />
             </div>
-            <Button variant="outline" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Life Vault</h1>
+          </div>
+
+          <nav className="flex-1 space-y-1">
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/dashboard')}>
+              <Layout size={20} /> Dashboard
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/present-vault')}>
+              <Calendar size={20} /> Present Vault
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/future-vault')}>
+              <Clock size={20} /> Future Vault
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/death-vault')}>
+              <Heart size={20} /> Death Vault
+            </Button>
+            <div className="pt-4 pb-2">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3">Account</p>
+            </div>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-blue-600 bg-blue-50 hover:bg-blue-100" onClick={() => navigate('/profile')}>
+              <User size={20} /> Profile
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50">
+              <Settings size={20} /> Settings
+            </Button>
+          </nav>
+
+          <div className="mt-auto pt-6 border-t border-slate-100">
+            <Button variant="ghost" className="w-full justify-start gap-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => {
+              logout();
+              window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+            }}>
+              <LogOut size={20} /> Logout
             </Button>
           </div>
-        </div>
-      </div>
+        </aside>
 
-      {/* Profile Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <ProfileSection user={user} />
-        </motion.div>
+        <main className="flex-1 min-w-0 overflow-auto">
+          {/* Header */}
+          <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              <div className="lg:hidden flex items-center gap-3">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="p-0 h-auto w-auto hover:bg-transparent">
+                      <Menu className="text-slate-600" size={24} />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-64 p-6">
+                    <SheetHeader className="mb-10 text-left">
+                      <SheetTitle className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                          <Shield className="text-white" size={24} />
+                        </div>
+                        <span className="text-xl font-bold text-slate-900 tracking-tight">Life Vault</span>
+                      </SheetTitle>
+                    </SheetHeader>
+                    <nav className="space-y-1">
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/dashboard')}>
+                        <Layout size={20} /> Dashboard
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/present-vault')}>
+                        <Calendar size={20} /> Present Vault
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/future-vault')}>
+                        <Clock size={20} /> Future Vault
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/death-vault')}>
+                        <Heart size={20} /> Death Vault
+                      </Button>
+                      <div className="pt-4 pb-2 text-left">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3">Account</p>
+                      </div>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-blue-600 bg-blue-50 hover:bg-blue-100" onClick={() => navigate('/profile')}>
+                        <User size={20} /> Profile
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50">
+                        <Settings size={20} /> Settings
+                      </Button>
+                    </nav>
+                  </SheetContent>
+                </Sheet>
+                <div className="flex items-center gap-2" onClick={() => navigate('/dashboard')}>
+                  <Shield className="text-blue-600" size={28} />
+                  <span className="font-bold text-lg">Life Vault</span>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <h2 className="text-lg font-bold text-slate-800 tracking-tight">Account Settings</h2>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-sm font-bold text-slate-900">{user?.name}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Premium Member</span>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-100 ring-2 ring-white">
+                  {user?.name?.charAt(0) || 'U'}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <ProfileSection user={user} />
+            </motion.div>
+          </div>
+        </main>
       </div>
     </div>
   );
