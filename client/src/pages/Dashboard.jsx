@@ -9,10 +9,11 @@ import {
   LogOut, Clock, User, Trash2, Calendar, TrendingUp, 
   Award, BarChart3, Sun, Moon, Layout, Grid, List,
   Zap, Target, Flame, Shield, Heart, Share2, Bell,
-  ChevronRight, Plus, Settings, HelpCircle
+  ChevronRight, Plus, Settings, HelpCircle, Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
@@ -191,8 +192,58 @@ export default function Dashboard() {
           <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
               <div className="lg:hidden flex items-center gap-3">
-                <Shield className="text-blue-600" size={28} />
-                <span className="font-bold text-lg">Life Vault</span>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="p-0 h-auto w-auto hover:bg-transparent">
+                      <Menu className="text-slate-600" size={24} />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-64 p-6">
+                    <SheetHeader className="mb-10 text-left">
+                      <SheetTitle className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                          <Shield className="text-white" size={24} />
+                        </div>
+                        <span className="text-xl font-bold text-slate-900 tracking-tight">Life Vault</span>
+                      </SheetTitle>
+                    </SheetHeader>
+                    <nav className="space-y-1">
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-blue-600 bg-blue-50 hover:bg-blue-100" onClick={() => navigate('/dashboard')}>
+                        <Layout size={20} /> Dashboard
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/present-vault')}>
+                        <Calendar size={20} /> Present Vault
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/future-vault')}>
+                        <Clock size={20} /> Future Vault
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/death-vault')}>
+                        <Heart size={20} /> Death Vault
+                      </Button>
+                      <div className="pt-4 pb-2 text-left">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3">Account</p>
+                      </div>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50" onClick={() => navigate('/profile')}>
+                        <User size={20} /> Profile
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-slate-600 hover:bg-slate-50">
+                        <Settings size={20} /> Settings
+                      </Button>
+                    </nav>
+                    <div className="mt-auto pt-6 border-t border-slate-100">
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => {
+                        logout();
+                        window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+                      }}>
+                        <LogOut size={20} /> Logout
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+                <div className="flex items-center gap-2" onClick={() => navigate('/dashboard')}>
+                  <Shield className="text-blue-600" size={28} />
+                  <span className="font-bold text-lg">Life Vault</span>
+                </div>
               </div>
               
               <div className="hidden lg:block">

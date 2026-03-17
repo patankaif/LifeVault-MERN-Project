@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { 
   Shield, Clock, Heart, Share2, Calendar, Lock, 
   ChevronRight, CheckCircle2, Star, Users, ArrowRight,
-  Play, Zap, Globe, MessageSquare
+  Play, Zap, Globe, MessageSquare, Menu
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Home() {
   const [, navigate] = useLocation();
@@ -41,12 +42,47 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/login')} className="text-slate-600 hover:text-blue-600">
-              Log in
-            </Button>
-            <Button onClick={() => navigate('/signup')} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-100 px-6">
-              Get Started
-            </Button>
+            <div className="hidden sm:flex items-center gap-4">
+              <Button variant="ghost" onClick={() => navigate('/login')} className="text-slate-600 hover:text-blue-600">
+                Log in
+              </Button>
+              <Button onClick={() => navigate('/signup')} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-100 px-6">
+                Get Started
+              </Button>
+            </div>
+
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-slate-600">
+                    <Menu size={24} />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <SheetHeader className="mb-8">
+                    <SheetTitle className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <Shield className="text-white" size={18} />
+                      </div>
+                      <span>Life Vault</span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-4">
+                    <a href="#features" className="text-lg font-medium text-slate-600 hover:text-blue-600 px-2 py-2 rounded-md hover:bg-slate-50">Features</a>
+                    <a href="#vaults" className="text-lg font-medium text-slate-600 hover:text-blue-600 px-2 py-2 rounded-md hover:bg-slate-50">Vaults</a>
+                    <a href="#security" className="text-lg font-medium text-slate-600 hover:text-blue-600 px-2 py-2 rounded-md hover:bg-slate-50">Security</a>
+                    <div className="h-px bg-slate-100 my-2"></div>
+                    <Button variant="outline" onClick={() => navigate('/login')} className="justify-center py-6">
+                      Log in
+                    </Button>
+                    <Button onClick={() => navigate('/signup')} className="bg-blue-600 hover:bg-blue-700 text-white justify-center py-6 shadow-lg shadow-blue-100">
+                      Get Started
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </nav>
