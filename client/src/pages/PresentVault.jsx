@@ -9,7 +9,8 @@ import {
   Package, Shield, ArrowLeft, Plus, Trash2, 
   Mail, User, ChevronRight, Loader2, AlertCircle,
   CheckCircle2, Info, Send, Archive, Zap, MessageSquare,
-  Image as ImageIcon, Video as VideoIcon, Calendar, Heart, ThumbsUp, Eye, X
+  Image as ImageIcon, Video as VideoIcon, Calendar, Heart, ThumbsUp, Eye, X,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,7 +33,7 @@ const AnimatedButton = ({ children, className, ...props }) => (
 
 export default function PresentVault() {
   const [, navigate] = useLocation();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, logout } = useAuth();
   const query = useQuery();
   const [slots, setSlots] = useState([]);
   const [newSlotName, setNewSlotName] = useState('');
@@ -225,6 +226,21 @@ export default function PresentVault() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <Button onClick={() => navigate('/dashboard')} variant="outline" className="text-slate-500 hover:text-slate-900">
+              <ArrowLeft size={20} className="mr-2" /> Back to Dashboard
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-red-500 hover:bg-red-50 hover:text-red-600 gap-2"
+              onClick={() => {
+                logout();
+                window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+              }}
+            >
+              <LogOut size={20} /> Logout
+            </Button>
+          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Present Vault</h1>
           <p className="text-gray-600">Share memories instantly with your loved ones</p>
         </div>

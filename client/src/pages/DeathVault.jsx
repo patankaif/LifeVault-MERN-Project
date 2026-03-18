@@ -340,13 +340,13 @@ import {
   Mail, User, ChevronRight, Loader2, AlertCircle,
   CheckCircle2, Info, Lock, Clock, Users, Archive,
   MessageSquare, ImageIcon, VideoIcon, Eye, AlertTriangle,
-  Calendar, FileText
+  Calendar, FileText, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DeathVault() {
   const [, navigate] = useLocation();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, logout } = useAuth();
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -741,14 +741,27 @@ export default function DeathVault() {
     <div className="min-h-screen bg-[#f8fafc]">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/dashboard')} 
-            className="text-slate-500 hover:text-slate-900"
-          >
-            <ArrowLeft size={20} className="mr-2" /> Back to Dashboard
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/dashboard')} 
+              className="text-slate-500 hover:text-slate-900 font-bold"
+            >
+              <ArrowLeft size={20} className="mr-2" /> Back
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-red-500 hover:bg-red-50 hover:text-red-600 gap-2 font-bold"
+              onClick={() => {
+                logout();
+                window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+              }}
+            >
+              <LogOut size={18} /> Logout
+            </Button>
+          </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white">
               <Heart size={18} />

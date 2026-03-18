@@ -246,6 +246,14 @@ export default function Profile() {
                         <Settings size={20} /> Settings
                       </Button>
                     </nav>
+                    <div className="mt-auto pt-6 border-t border-slate-100">
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => {
+                        logout();
+                        window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+                      }}>
+                        <LogOut size={20} /> Logout
+                      </Button>
+                    </div>
                   </SheetContent>
                 </Sheet>
                 <div className="flex items-center gap-2" onClick={() => navigate('/dashboard')}>

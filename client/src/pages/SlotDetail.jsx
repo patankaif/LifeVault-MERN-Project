@@ -9,14 +9,14 @@ import {
   ArrowLeft, Plus, Trash2, Mail, Image as ImageIcon, 
   Video as VideoIcon, MessageSquare, Heart, Send, 
   Loader2, AlertCircle, CheckCircle2, Calendar, Clock,
-  FileText, X, Download, ExternalLink
+  FileText, X, Download, ExternalLink, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SlotDetail() {
   const [, params] = useRoute('/slots/:id');
   const [, navigate] = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [slot, setSlot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -178,9 +178,22 @@ export default function SlotDetail() {
     <div className="min-h-screen bg-[#f8fafc]">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-slate-500 hover:text-slate-900">
-            <ArrowLeft size={20} className="mr-2" /> Back
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-slate-500 hover:text-slate-900 font-bold">
+              <ArrowLeft size={20} className="mr-2" /> Back
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-red-500 hover:bg-red-50 hover:text-red-600 gap-2 font-bold"
+              onClick={() => {
+                logout();
+                window.location.href = 'https://lifevault-api-cmmw.onrender.com';
+              }}
+            >
+              <LogOut size={18} /> Logout
+            </Button>
+          </div>
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${
               slot.vaultType === 'death' ? 'bg-rose-600' : 
