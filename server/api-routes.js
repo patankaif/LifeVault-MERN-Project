@@ -459,6 +459,33 @@ router.post('/slots/:slotId/schedule', verifyToken, async (req, res) => {
   }
 });
 
+// Instant delivery for Present Vault
+router.post('/slots/:slotId/deliver', verifyToken, async (req, res) => {
+  try {
+    const { slotId } = req.params;
+    const { email, deliveryType } = req.body;
+    const userId = req.user.userId;
+
+    console.log(`[Instant Delivery] User: ${userId}, Slot: ${slotId}, Email: ${email}, Type: ${deliveryType}`);
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Recipient email is required' });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid email address' });
+    }
+
+    const result = await vaultUtils.instantDelivery(slotId, email, userId);
+    res.json(result);
+  } catch (error) {
+    console.error('[Instant Delivery] Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Check delivery status
 router.get('/slots/:slotId/delivery-status', verifyToken, async (req, res) => {
   try {

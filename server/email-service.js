@@ -9,5 +9,6 @@ export const sendInactivityConfirmationEmail = emailService.sendInactivityConfir
 export const sendDeathVaultNotification = emailService.sendDeathVaultNotification;
 export const sendWelcomeEmail = emailService.sendWelcomeEmail;
 export const sendSlotDeliveryConfirmation = emailService.sendSlotDeliveryConfirmation;
+export const sendInstantDeliveryEmail = emailService.sendInstantDeliveryEmail;
 
 export default emailService;

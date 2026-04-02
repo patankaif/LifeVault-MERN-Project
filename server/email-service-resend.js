@@ -411,6 +411,119 @@ export async function sendSlotDeliveryConfirmation(email, slotName, recipientEma
   }
 }
 
+// Send instant delivery email for Present Vault
+export async function sendInstantDeliveryEmail({ to, subject, slotName, media, texts, senderName, deliveryDate }) {
+  try {
+    // Generate media URLs for email
+    const mediaItems = media.map((item, index) => {
+      if (item.type === 'image') {
+        return `
+          <div style="margin: 10px 0;">
+            <img src="${item.url}" alt="Memory ${index + 1}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          </div>
+        `;
+      } else if (item.type === 'video') {
+        return `
+          <div style="margin: 10px 0;">
+            <video controls style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+              <source src="${item.url}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        `;
+      }
+      return '';
+    }).join('');
+
+    // Generate text content
+    const textItems = texts.map((text, index) => `
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #007bff;">
+        <p style="margin: 0; color: #333; white-space: pre-wrap;">${text.content}</p>
+      </div>
+    `).join('');
+
+    const { data, error } = await resend.emails.send({
+      from: `${process.env.FROM_NAME || 'LifeVault'} <${process.env.FROM_EMAIL}>`,
+      to: [to],
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px 20px;">
+          <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; font-size: 32px; margin: 0; font-weight: 700;">🎁 Life Vault</h1>
+              <p style="color: #666; margin: 10px 0 0;">A Special Memory Just for You</p>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; border-radius: 15px; margin: 30px 0; box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);">
+              <h2 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">💌 You've Received a Memory!</h2>
+              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">${senderName} has shared something special with you</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin: 30px 0; border-left: 4px solid #28a745;">
+              <h3 style="color: #155724; margin: 0 0 15px;">📦 Memory Details</h3>
+              <div style="background: white; padding: 15px; border-radius: 8px; margin: 0;">
+                <p style="margin: 8px 0;"><strong>📝 Memory Name:</strong> ${slotName}</p>
+                <p style="margin: 8px 0;"><strong>👤 From:</strong> ${senderName}</p>
+                <p style="margin: 8px 0;"><strong>⏰ Delivered:</strong> ${new Date(deliveryDate).toLocaleString()}</p>
+              </div>
+            </div>
+            
+            ${mediaItems ? `
+              <div style="margin: 30px 0;">
+                <h3 style="color: #333; margin: 0 0 15px;">📸 Photos & Videos</h3>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                  ${mediaItems}
+                </div>
+              </div>
+            ` : ''}
+            
+            ${textItems ? `
+              <div style="margin: 30px 0;">
+                <h3 style="color: #333; margin: 0 0 15px;">📝 Messages</h3>
+                ${textItems}
+              </div>
+            ` : ''}
+            
+            ${!mediaItems && !textItems ? `
+              <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin: 30px 0; border-left: 4px solid #ffc107;">
+                <p style="color: #856404; margin: 0; text-align: center;">
+                  <strong>📭 No content available</strong><br>
+                  <span style="font-size: 14px;">This memory slot doesn't contain any photos, videos, or messages yet.</span>
+                </p>
+              </div>
+            ` : ''}
+            
+            <div style="background: #d1ecf1; padding: 20px; border-radius: 10px; margin: 30px 0; border-left: 4px solid #17a2b8;">
+              <p style="color: #0c5460; margin: 0; text-align: center;">
+                <strong>💚 What is Life Vault?</strong><br>
+                <span style="font-size: 14px;">Life Vault helps people preserve and share their precious memories with loved ones. This memory was shared instantly with you from someone who cares.</span>
+              </p>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            
+            <div style="text-align: center; color: #999; font-size: 12px;">
+              <p style="margin: 0;">This memory was shared with you through Life Vault</p>
+              <p style="margin: 10px 0 0;">© 2026 Life Vault. Preserving memories, connecting hearts.</p>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('[Email Service] Failed to send instant delivery:', error);
+      throw error;
+    }
+
+    console.log('[Email Service] Instant delivery sent successfully to', to);
+    return data;
+  } catch (error) {
+    console.error('[Email Service] Failed to send instant delivery:', error);
+    throw error;
+  }
+}
+
 export default {
   initEmailService,
   sendOTP,
@@ -419,4 +532,5 @@ export default {
   sendDeathVaultNotification,
   sendWelcomeEmail,
   sendSlotDeliveryConfirmation,
+  sendInstantDeliveryEmail,
 };

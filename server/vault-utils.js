@@ -607,6 +607,66 @@ export async function verifyMediaIntegrity() {
   }
 }
 
+// Instant delivery for Present Vault
+export async function instantDelivery(slotId, recipientEmail, userId) {
+  try {
+    const db = await getDB();
+    
+    // Get the slot to verify ownership and get content
+    const slot = await db.collection('slots').findOne({ _id: slotId, userId });
+    if (!slot) {
+      throw new Error('Slot not found or access denied');
+    }
+
+    // Check if slot has content
+    if ((!slot.media || slot.media.length === 0) && (!slot.texts || slot.texts.length === 0)) {
+      throw new Error('Cannot deliver empty slot. Please add some content first.');
+    }
+
+    console.log(`[Instant Delivery] Starting delivery for slot ${slotId} to ${recipientEmail}`);
+
+    // Prepare email content
+    const emailContent = {
+      to: recipientEmail,
+      subject: `Memory Shared: ${slot.name}`,
+      slotName: slot.name,
+      media: slot.media || [],
+      texts: slot.texts || [],
+      senderName: 'Someone who cares about you',
+      deliveryDate: new Date().toISOString(),
+    };
+
+    // Send email immediately
+    const emailService = await import('./email-service.js');
+    await emailService.sendInstantDeliveryEmail(emailContent);
+
+    // Update slot with delivery info
+    await db.collection('slots').updateOne(
+      { _id: slotId },
+      { 
+        $set: { 
+          scheduledEmail: recipientEmail,
+          deliveredAt: new Date(),
+          deliveryType: 'instant',
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    console.log(`[Instant Delivery] Successfully delivered slot ${slotId} to ${recipientEmail}`);
+
+    return { 
+      success: true, 
+      message: 'Memory delivered successfully!',
+      deliveredTo: recipientEmail,
+      deliveredAt: new Date()
+    };
+  } catch (error) {
+    console.error('[Vault] Failed instant delivery:', error);
+    throw error;
+  }
+}
+
 export default {
   getVault,
   createSlot,
@@ -625,4 +685,5 @@ export default {
   getSharedSlot,
   cleanupOrphanedFiles,
   verifyMediaIntegrity,
+  instantDelivery,
 };

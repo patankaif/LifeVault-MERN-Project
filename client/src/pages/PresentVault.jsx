@@ -48,6 +48,8 @@ export default function PresentVault() {
   const [editingSlot, setEditingSlot] = useState(null);
   const [editingSlotName, setEditingSlotName] = useState('');
   const [viewSlotModal, setViewSlotModal] = useState(null);
+  const [deliveryModal, setDeliveryModal] = useState(null);
+  const [deliveryEmail, setDeliveryEmail] = useState('');
   const focusedSlotId = query.get('slot');
 
   useEffect(() => {
@@ -195,7 +197,7 @@ export default function PresentVault() {
       return;
     }
     try {
-      const response = await authFetch(`/api/slots/${slotId}`, {
+      const response = await authFetch(`/api/slots/${slotId}/name`, {
         method: 'PUT',
         body: JSON.stringify({ slotName: editingSlotName }),
       });
@@ -204,6 +206,48 @@ export default function PresentVault() {
         setSlots(slots.map(s => s._id === slotId ? { ...s, name: editingSlotName } : s));
         setEditingSlot(null);
         setEditingSlotName('');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const deliverSlot = async (slotId) => {
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!deliveryEmail) {
+      setError('Please enter recipient email');
+      return;
+    }
+    
+    if (!emailRegex.test(deliveryEmail)) {
+      setError('Please enter a valid email address (e.g., patan@gmail.com)');
+      return;
+    }
+
+    try {
+      const response = await authFetch(`/api/slots/${slotId}/deliver`, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          email: deliveryEmail,
+          deliveryType: 'instant' // Present vault delivers instantly
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        // Update slot with delivery info
+        setSlots(slots.map(s => 
+          s._id === slotId 
+            ? { ...s, scheduledEmail: deliveryEmail, deliveredAt: new Date().toISOString() }
+            : s
+        ));
+        setDeliveryModal(null);
+        setDeliveryEmail('');
+        setError('');
+        alert('Memory delivered successfully!');
+      } else {
+        setError(data.message);
       }
     } catch (err) {
       setError(err.message);
@@ -512,6 +556,44 @@ export default function PresentVault() {
                     )}
                   </div>
 
+                  {/* Delivery Button */}
+                  {totalItems > 0 && !slot.scheduledEmail && (
+                    <div className="border-t border-gray-100 pt-3 mt-3">
+                      <AnimatedButton 
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm" 
+                        size="sm" 
+                        onClick={() => {
+                          setDeliveryEmail('');
+                          setError('');
+                          setDeliveryModal(slot._id);
+                        }}>
+                        <Send size={14} className="mr-1" /> Send Memory Now
+                      </AnimatedButton>
+                    </div>
+                  )}
+
+                  {/* Delivery Status */}
+                  {slot.scheduledEmail && (
+                    <div className="border-t border-gray-100 pt-3 mt-3">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-600" />
+                            <div>
+                              <p className="text-sm font-semibold text-green-800">Delivered to:</p>
+                              <p className="text-sm font-bold text-green-900">{slot.scheduledEmail}</p>
+                              {slot.deliveredAt && (
+                                <p className="text-xs text-green-700">
+                                  {new Date(slot.deliveredAt).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Add Content Section */}
                   {expandedSlot === slot._id && (
                     <div className="border-t border-gray-200 pt-4 mt-4">
@@ -557,6 +639,134 @@ export default function PresentVault() {
               <Plus size={20} className="mr-2" />
               Create First Memory
             </AnimatedButton>
+          </div>
+        )}
+
+        {viewSlotModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle className="text-2xl">{viewSlotModal.name}</CardTitle>
+                <Button variant="ghost" onClick={() => setViewSlotModal(null)}>
+                  <X size={20} />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Slot Info */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">Slot Information</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Total Items:</span> {viewSlotModal.media?.length || 0} media, {viewSlotModal.texts?.length || 0} texts
+                    </div>
+                    <div>
+                      <span className="font-medium">Created:</span> {new Date(viewSlotModal.createdAt).toLocaleDateString()}
+                    </div>
+                    {viewSlotModal.scheduledEmail && (
+                      <div className="col-span-2">
+                        <span className="font-medium">Scheduled for:</span> {viewSlotModal.scheduledEmail}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Media Section */}
+                {viewSlotModal.media && viewSlotModal.media.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Media ({viewSlotModal.media.length})</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {viewSlotModal.media.map(m => (
+                        <div key={m._id} className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+                            {m.type === 'image' ? (
+                              <img 
+                                src={m.url} 
+                                alt="Memory" 
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                                onClick={() => window.open(m.url, '_blank')}
+                              />
+                            ) : (
+                              <video 
+                                src={m.url} 
+                                className="w-full h-full object-cover"
+                                controls
+                                onClick={() => window.open(m.url, '_blank')}
+                              />
+                            )}
+                          </div>
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button size="sm" variant="secondary" onClick={() => window.open(m.url, '_blank')}>
+                              <Eye size={12} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Texts Section */}
+                {viewSlotModal.texts && viewSlotModal.texts.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Texts ({viewSlotModal.texts.length})</h3>
+                    <div className="space-y-3">
+                      {viewSlotModal.texts.map(t => (
+                        <div key={t._id} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <p className="text-gray-800 whitespace-pre-wrap">{t.content}</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(t.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Close Button */}
+                <div className="flex justify-end">
+                  <AnimatedButton onClick={() => setViewSlotModal(null)} className="px-8">
+                    Close
+                  </AnimatedButton>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {deliveryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-xl">Send Memory Instantly</CardTitle>
+                <CardDescription>
+                  This memory will be delivered immediately to the recipient's email.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Recipient Email</label>
+                  <Input 
+                    type="email" 
+                    placeholder="Enter recipient email..."
+                    value={deliveryEmail}
+                    onChange={e => setDeliveryEmail(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                {error && (
+                  <div className="text-red-600 text-sm">{error}</div>
+                )}
+                <div className="flex gap-2">
+                  <AnimatedButton onClick={() => deliverSlot(deliveryModal)} className="flex-1">
+                    <Send size={14} className="mr-1" /> Send Now
+                  </AnimatedButton>
+                  <AnimatedButton variant="outline" onClick={() => {
+                    setDeliveryModal(null);
+                    setError('');
+                  }} className="flex-1">Cancel</AnimatedButton>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
