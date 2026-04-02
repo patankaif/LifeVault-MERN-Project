@@ -48,8 +48,9 @@ export default function PresentVault() {
   const [editingSlot, setEditingSlot] = useState(null);
   const [editingSlotName, setEditingSlotName] = useState('');
   const [viewSlotModal, setViewSlotModal] = useState(null);
-  const [deliveryModal, setDeliveryModal] = useState(null);
-  const [deliveryEmail, setDeliveryEmail] = useState('');
+  const [scheduleModal, setScheduleModal] = useState(null);
+  const [scheduleEmail, setScheduleEmail] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
   const focusedSlotId = query.get('slot');
 
   useEffect(() => {
@@ -212,40 +213,44 @@ export default function PresentVault() {
     }
   };
 
-  const deliverSlot = async (slotId) => {
+  const scheduleSlot = async (slotId) => {
     // Email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!deliveryEmail) {
-      setError('Please enter recipient email');
+    if (!scheduleEmail || !scheduleDate) {
+      setError('Please enter email and date');
       return;
     }
     
-    if (!emailRegex.test(deliveryEmail)) {
+    if (!emailRegex.test(scheduleEmail)) {
       setError('Please enter a valid email address (e.g., patan@gmail.com)');
       return;
     }
 
     try {
-      const response = await authFetch(`/api/slots/${slotId}/deliver`, {
+      const response = await authFetch(`/api/slots/${slotId}/schedule`, {
         method: 'POST',
         body: JSON.stringify({ 
-          email: deliveryEmail,
-          deliveryType: 'instant' // Present vault delivers instantly
+          recipientEmail: scheduleEmail,
+          scheduledDate: scheduleDate,
+          vaultType: 'present'
         }),
       });
       
       const data = await response.json();
       if (data.success) {
-        // Update slot with delivery info
+        // Check if this was an update or new schedule
+        const existingSlot = slots.find(s => s._id === slotId);
+        const isUpdate = existingSlot && existingSlot.scheduledEmail;
+        
         setSlots(slots.map(s => 
           s._id === slotId 
-            ? { ...s, scheduledEmail: deliveryEmail, deliveredAt: new Date().toISOString() }
+            ? { ...s, scheduledDate: scheduleDate, scheduledEmail: scheduleEmail }
             : s
         ));
-        setDeliveryModal(null);
-        setDeliveryEmail('');
+        setScheduleModal(null);
+        setScheduleEmail('');
+        setScheduleDate('');
         setError('');
-        alert('Memory delivered successfully!');
       } else {
         setError(data.message);
       }
@@ -394,6 +399,23 @@ export default function PresentVault() {
                           <div>
                             <p className="text-sm font-semibold text-blue-800">Scheduled for:</p>
                             <p className="text-lg font-bold text-blue-900">{slot.scheduledEmail}</p>
+                            {slot.scheduledDate && (
+                              <p className="text-sm text-blue-700">
+                                {(() => {
+                                  const date = new Date(slot.scheduledDate);
+                                  // Add timezone offset to display correct local time
+                                  const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
+                                  return localDate.toLocaleString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  });
+                                })()}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <Button 
@@ -577,54 +599,78 @@ export default function PresentVault() {
                     </div>
                   )}
 
-                  {/* Delivery Button Section - Like Future Vault */}
+                  {/* Schedule Button Section - Exactly like Future Vault */}
                   {slot.scheduledEmail ? (
                     <div className="flex gap-2 mt-3">
                       <AnimatedButton 
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs" 
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs" 
                         size="sm" 
-                        onClick={() => console.log('View delivered memory')}
+                        onClick={() => {
+                          // Pre-populate form with existing data
+                          setScheduleEmail(slot.scheduledEmail || '');
+                          // Format date for datetime-local input (YYYY-MM-DDTHH:MM)
+                          if (slot.scheduledDate) {
+                            const date = new Date(slot.scheduledDate);
+                            const formattedDate = date.toISOString().slice(0, 16);
+                            setScheduleDate(formattedDate);
+                          } else {
+                            setScheduleDate('');
+                          }
+                          setError(''); // Clear any previous error messages
+                          setScheduleModal(slot._id);
+                        }}
                       >
-                        <CheckCircle2 size={14} className="mr-1" /> Delivered
+                        Edit
                       </AnimatedButton>
                       <AnimatedButton 
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs" 
                         size="sm" 
                         onClick={() => {
-                          if (window.confirm('Are you sure you want to remove this delivery?')) {
-                            // Remove delivery status
+                          if (window.confirm('Are you sure to delete this delivery time?')) {
+                            // Delete delivery schedule
                             setSlots(slots.map(s => 
                               s._id === slot._id 
-                                ? { ...s, scheduledEmail: null, deliveredAt: null }
+                                ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
                                 : s
                             ));
                           }
                         }}
                       >
-                        <Trash2 size={14} className="mr-1" /> Remove
+                        <Trash2 size={14} className="mr-1" /> Delete
                       </AnimatedButton>
                     </div>
                   ) : (
-                    <AnimatedButton 
-                      className="w-full mt-3 flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white" 
-                      size="sm" 
-                      onClick={() => {
-                        // Only allow delivery if slot has content
-                        const texts = slot.texts || [];
-                        const media = slot.media || [];
-                        const totalItems = texts.length + media.length;
-                        
-                        if (totalItems === 0) {
-                          setError('Please add some content before sending');
-                          return;
-                        }
-                        
-                        setDeliveryEmail('');
-                        setError('');
-                        setDeliveryModal(slot._id);
-                      }}
-                    >
-                      <Send size={14} className="mr-1" /> Send Memory Now
+                    <AnimatedButton className="w-full mt-3 flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white" size="sm" onClick={() => {
+                      // Only allow scheduling if slot has content
+                      const texts = slot.texts || [];
+                      const media = slot.media || [];
+                      const totalItems = texts.length + media.length;
+                      
+                      if (totalItems === 0) {
+                        // Show message instead of opening schedule modal
+                        return;
+                      }
+                      
+                      // Pre-populate form with existing data if available
+                      setScheduleEmail(slot.scheduledEmail || '');
+                      // Format date for datetime-local input (YYYY-MM-DDTHH:MM) - fix timezone issue
+                      if (slot.scheduledDate) {
+                        const date = new Date(slot.scheduledDate);
+                        // Get local date components to avoid UTC conversion
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+                        setScheduleDate(formattedDate);
+                      } else {
+                        setScheduleDate('');
+                      }
+                      setError(''); // Clear any previous error messages
+                      setScheduleModal(slot._id);
+                    }}>
+                      <Mail size={14} className="mr-1" /> Schedule
                     </AnimatedButton>
                   )}
                 </CardContent>
@@ -746,13 +792,13 @@ export default function PresentVault() {
           </div>
         )}
 
-        {deliveryModal && (
+        {scheduleModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <Card className="w-full max-w-md">
               <CardHeader>
-                <CardTitle className="text-xl">Send Memory Instantly</CardTitle>
+                <CardTitle className="text-xl">Schedule Memory Delivery</CardTitle>
                 <CardDescription>
-                  This memory will be delivered immediately to the recipient's email.
+                  Set when you want this memory to be delivered.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -761,20 +807,27 @@ export default function PresentVault() {
                   <Input 
                     type="email" 
                     placeholder="Enter recipient email..."
-                    value={deliveryEmail}
-                    onChange={e => setDeliveryEmail(e.target.value)}
+                    value={scheduleEmail}
+                    onChange={e => setScheduleEmail(e.target.value)}
                     className="w-full"
                   />
                 </div>
-                {error && (
+                <div>
+                  <label className="text-sm font-medium">Delivery Date & Time</label>
+                  <Input 
+                    type="datetime-local" 
+                    value={scheduleDate} 
+                    onChange={e => setScheduleDate(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)} // Prevent selecting past dates
+                  />
+                </div>
+                {error && !error.includes('valid email') && (
                   <div className="text-red-600 text-sm">{error}</div>
                 )}
                 <div className="flex gap-2">
-                  <AnimatedButton onClick={() => deliverSlot(deliveryModal)} className="flex-1">
-                    <Send size={14} className="mr-1" /> Send Now
-                  </AnimatedButton>
+                  <AnimatedButton onClick={() => scheduleSlot(scheduleModal)} className="flex-1">Schedule</AnimatedButton>
                   <AnimatedButton variant="outline" onClick={() => {
-                    setDeliveryModal(null);
+                    setScheduleModal(null);
                     setError('');
                   }} className="flex-1">Cancel</AnimatedButton>
                 </div>
