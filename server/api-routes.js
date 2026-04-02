@@ -4,7 +4,7 @@ import { storagePut, storageGet } from './storage.ts';
 import * as authUtils from './auth-utils.js';
 import * as vaultUtils from './vault-utils.js';
 import * as inactivityUtils from './inactivity-utils.js';
-import { connectDB } from './db-mongo.js';
+import { connectDB, getDB } from './db-mongo.js';
 
 const router = express.Router();
 
@@ -567,6 +567,41 @@ router.post('/maintenance/cleanup-files', verifyToken, async (req, res) => {
     const result = await vaultUtils.cleanupOrphanedFiles();
     res.json(result);
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Death Vault endpoints
+router.post('/vaults/death/accept-rules', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const db = await getDB();
+    
+    // Update user's death vault rules acceptance status
+    await db.collection('users').updateOne(
+      { _id: userId },
+      { $set: { deathVaultRulesAccepted: true, updatedAt: new Date() } }
+    );
+    
+    res.json({ success: true, message: 'Death Vault rules accepted successfully' });
+  } catch (error) {
+    console.error('[API] Failed to accept Death Vault rules:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/vaults/death/rules-status', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const db = await getDB();
+    
+    // Get user's death vault rules acceptance status
+    const user = await db.collection('users').findOne({ _id: userId });
+    const rulesAccepted = user?.deathVaultRulesAccepted || false;
+    
+    res.json({ success: true, rulesAccepted });
+  } catch (error) {
+    console.error('[API] Failed to get Death Vault rules status:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
