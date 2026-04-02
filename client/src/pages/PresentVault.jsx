@@ -556,44 +556,6 @@ export default function PresentVault() {
                     )}
                   </div>
 
-                  {/* Delivery Button */}
-                  {totalItems > 0 && !slot.scheduledEmail && (
-                    <div className="border-t border-gray-100 pt-3 mt-3">
-                      <AnimatedButton 
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm" 
-                        size="sm" 
-                        onClick={() => {
-                          setDeliveryEmail('');
-                          setError('');
-                          setDeliveryModal(slot._id);
-                        }}>
-                        <Send size={14} className="mr-1" /> Send Memory Now
-                      </AnimatedButton>
-                    </div>
-                  )}
-
-                  {/* Delivery Status */}
-                  {slot.scheduledEmail && (
-                    <div className="border-t border-gray-100 pt-3 mt-3">
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-green-600" />
-                            <div>
-                              <p className="text-sm font-semibold text-green-800">Delivered to:</p>
-                              <p className="text-sm font-bold text-green-900">{slot.scheduledEmail}</p>
-                              {slot.deliveredAt && (
-                                <p className="text-xs text-green-700">
-                                  {new Date(slot.deliveredAt).toLocaleString()}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Add Content Section */}
                   {expandedSlot === slot._id && (
                     <div className="border-t border-gray-200 pt-4 mt-4">
@@ -613,6 +575,57 @@ export default function PresentVault() {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Delivery Button Section - Like Future Vault */}
+                  {slot.scheduledEmail ? (
+                    <div className="flex gap-2 mt-3">
+                      <AnimatedButton 
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs" 
+                        size="sm" 
+                        onClick={() => console.log('View delivered memory')}
+                      >
+                        <CheckCircle2 size={14} className="mr-1" /> Delivered
+                      </AnimatedButton>
+                      <AnimatedButton 
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs" 
+                        size="sm" 
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to remove this delivery?')) {
+                            // Remove delivery status
+                            setSlots(slots.map(s => 
+                              s._id === slot._id 
+                                ? { ...s, scheduledEmail: null, deliveredAt: null }
+                                : s
+                            ));
+                          }
+                        }}
+                      >
+                        <Trash2 size={14} className="mr-1" /> Remove
+                      </AnimatedButton>
+                    </div>
+                  ) : (
+                    <AnimatedButton 
+                      className="w-full mt-3 flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white" 
+                      size="sm" 
+                      onClick={() => {
+                        // Only allow delivery if slot has content
+                        const texts = slot.texts || [];
+                        const media = slot.media || [];
+                        const totalItems = texts.length + media.length;
+                        
+                        if (totalItems === 0) {
+                          setError('Please add some content before sending');
+                          return;
+                        }
+                        
+                        setDeliveryEmail('');
+                        setError('');
+                        setDeliveryModal(slot._id);
+                      }}
+                    >
+                      <Send size={14} className="mr-1" /> Send Memory Now
+                    </AnimatedButton>
                   )}
                 </CardContent>
               </Card>
