@@ -98,7 +98,7 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 className="text-white hover:text-blue-400 transition-colors font-medium"
               >
-                Patan Kaif Khan
+                Patan Mohammad Kaif Khan
               </a>
             </div>
             <div className="flex items-center gap-4 text-xs text-slate-500">
