@@ -403,9 +403,7 @@ export default function PresentVault() {
                               <p className="text-sm text-blue-700">
                                 {(() => {
                                   const date = new Date(slot.scheduledDate);
-                                  // Add timezone offset to display correct local time
-                                  const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-                                  return localDate.toLocaleString('en-US', { 
+                                  return date.toLocaleString('en-US', { 
                                     month: 'short', 
                                     day: 'numeric', 
                                     year: 'numeric',
@@ -627,9 +625,7 @@ export default function PresentVault() {
                         <span className="truncate">
                           Scheduled at {(() => {
                             const date = new Date(slot.scheduledDate);
-                            // Add timezone offset to display correct local time
-                            const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-                            return localDate.toLocaleString('en-US', { 
+                            return date.toLocaleString('en-US', { 
                               month: 'short', 
                               day: 'numeric', 
                               hour: '2-digit',

@@ -1039,13 +1039,11 @@ export default function FutureVault() {
                         <span className="truncate">
                           Scheduled at {(() => {
                             const date = new Date(slot.scheduledDate);
-                            // Add timezone offset to display correct local time
-                            const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
-                            return localDate.toLocaleDateString('en-US', { 
+                            return date.toLocaleDateString('en-US', { 
                               month: 'short', 
                               day: 'numeric', 
                               year: 'numeric' 
-                            }) + ' ' + localDate.toLocaleTimeString('en-US', { 
+                            }) + ' ' + date.toLocaleTimeString('en-US', { 
                               hour: '2-digit', 
                               minute: '2-digit',
                               hour12: true 
