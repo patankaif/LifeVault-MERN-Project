@@ -599,9 +599,46 @@ export default function PresentVault() {
                     </div>
                   )}
 
-                  {/* Schedule Button Section - Exactly like Future Vault */}
-                  {slot.scheduledEmail ? (
-                    <div className="flex gap-2 mt-3">
+                  {/* Schedule Button Status - Exactly like Future Vault */}
+                  {slot.scheduledDate && slot.delivered ? (
+                    <div className="flex gap-2 w-full mt-3">
+                      <AnimatedButton className="flex-1 bg-green-600 hover:bg-green-700 text-white cursor-default" size="sm">
+                        <Heart size={14} className="mr-1" /> Slot Delivered
+                      </AnimatedButton>
+                      <AnimatedButton 
+                        className="flex-1 bg-teal-600 hover:bg-teal-700 text-white" 
+                        size="sm" 
+                        onClick={() => {
+                          // Reset slot for new schedule
+                          setSlots(slots.map(s => 
+                            s._id === slot._id 
+                              ? { ...s, scheduledDate: null, scheduledEmail: null, delivered: false }
+                              : s
+                          ));
+                        }}
+                      >
+                        <Mail size={14} className="mr-1" /> New Schedule
+                      </AnimatedButton>
+                    </div>
+                  ) : slot.scheduledDate ? (
+                    <div className="flex gap-2 w-full mt-3">
+                      <AnimatedButton className="flex-1 bg-orange-500 hover:bg-orange-600 text-white cursor-default text-xs" size="sm">
+                        <Mail size={14} className="mr-1 flex-shrink-0" />
+                        <span className="truncate">
+                          Scheduled at {(() => {
+                            const date = new Date(slot.scheduledDate);
+                            // Add timezone offset to display correct local time
+                            const localDate = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
+                            return localDate.toLocaleString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true 
+                            });
+                          })()}
+                        </span>
+                      </AnimatedButton>
                       <AnimatedButton 
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs" 
                         size="sm" 
