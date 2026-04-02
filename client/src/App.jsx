@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import Footer from '@/components/Footer';
 
 // Pages
 import Home from '@/pages/Home';
@@ -49,7 +50,12 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
-            <Router />
+            <div className="min-h-screen flex flex-col">
+              <main className="flex-1">
+                <Router />
+              </main>
+              <Footer />
+            </div>
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
