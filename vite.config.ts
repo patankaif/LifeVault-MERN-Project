@@ -198,5 +198,5 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-  },
+  } as any,
 });

@@ -20,17 +20,17 @@ export const appRouter = router({
 
   account: router({
     sendDeletionOTP: protectedProcedure.mutation(async ({ ctx }) => {
-      return await sendDeletionOTP(ctx.user.id);
+      return await sendDeletionOTP(String(ctx.user.id));
     }),
     
     verifyAndDelete: protectedProcedure
-      .input(otp => otp)
+      .input(otp => otp as string)
       .mutation(async ({ ctx, input }) => {
-        return await verifyAndDeleteAccount(ctx.user.id, input);
+        return await verifyAndDeleteAccount(String(ctx.user.id), input);
       }),
       
     checkDeletionStatus: protectedProcedure.query(async ({ ctx }) => {
-      return await checkDeletionOTPStatus(ctx.user.id);
+      return await checkDeletionOTPStatus(String(ctx.user.id));
     }),
   }),
 

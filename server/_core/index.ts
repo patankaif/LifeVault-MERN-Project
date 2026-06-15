@@ -44,6 +44,11 @@ async function startServer() {
     connectDB = dbModule.connectDB;
     initEmailService = emailModule.initEmailService;
     startAllJobs = jobsModule.startAllJobs;
+    
+    // Eagerly connect to MongoDB at startup to prevent slow first requests
+    console.log("[Server] Connecting to MongoDB...");
+    await connectDB();
+    
     console.log("[Server] All services initialized successfully");
   } catch (error) {
     console.error("[Server] Failed to initialize services:", error);
@@ -81,6 +86,28 @@ async function startServer() {
     console.log('[Server] Could not read uploads directory:', (error as Error).message);
   }
   
+  // Simple health check endpoint
+  app.get("/health", async (req, res) => {
+    try {
+      if (connectDB) {
+        const db = await connectDB();
+        await db.command({ ping: 1 });
+      }
+      res.status(200).json({ 
+        status: "OK", 
+        database: connectDB ? "connected" : "not initialized",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        status: "ERROR", 
+        database: (error as Error).message,
+        timestamp: new Date().toISOString() 
+      });
+    }
+  });
+
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // tRPC API

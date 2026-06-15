@@ -5,7 +5,7 @@ services:
     env: node
     repo: https://github.com/patankaif/LifeVault.git
     rootDir: .
-    buildCommand: pnpm install && pnpm run build
+    buildCommand: pnpm install --frozen-lockfile && pnpm run build
     startCommand: pnpm start
     envVars:
       - key: NODE_ENV
