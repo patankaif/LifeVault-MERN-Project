@@ -347,6 +347,17 @@ const AnimatedButton = ({ children, className, ...props }) => (
   </Button>
 );
 
+// Helper to get local date-time string in YYYY-MM-DDTHH:MM format
+const getLocalDateTimeString = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 export default function FutureVault() {
   const [, navigate] = useLocation();
   const { isAuthenticated, loading: authLoading, logout } = useAuth();
@@ -1157,7 +1168,10 @@ export default function FutureVault() {
                     type="email" 
                     placeholder="recipient@example.com" 
                     value={scheduleEmail} 
-                    onChange={e => setScheduleEmail(e.target.value)}
+                    onChange={e => {
+                      setScheduleEmail(e.target.value);
+                      setError('');
+                    }}
                     className={error && error.includes('valid email') ? 'border-red-500' : ''}
                   />
                   {error && error.includes('valid email') && (
@@ -1169,8 +1183,11 @@ export default function FutureVault() {
                   <Input 
                     type="datetime-local" 
                     value={scheduleDate} 
-                    onChange={e => setScheduleDate(e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)} // Prevent selecting past dates
+                    onChange={e => {
+                      setScheduleDate(e.target.value);
+                      setError('');
+                    }}
+                    min={getLocalDateTimeString()}
                   />
                 </div>
                 {error && !error.includes('valid email') && (

@@ -26,8 +26,11 @@ export function getISTDateForDB(date = new Date()) {
 
 // Convert IST input to UTC for storage
 export function convertISTToUTC(istDateString) {
-  const istDate = new Date(istDateString);
-  // Subtract 5.5 hours to convert IST to UTC
-  const utcTime = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
-  return utcTime;
+  // If the string doesn't end with Z and doesn't contain a + or - offset after 'T'
+  const hasTimezone = istDateString.endsWith('Z') || 
+                      istDateString.includes('+') || 
+                      (istDateString.includes('T') && istDateString.split('T')[1].includes('-'));
+  
+  const dateStr = hasTimezone ? istDateString : istDateString + "+05:30";
+  return new Date(dateStr);
 }
