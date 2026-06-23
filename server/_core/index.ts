@@ -47,7 +47,12 @@ async function startServer() {
     
     // Eagerly connect to MongoDB at startup to prevent slow first requests
     console.log("[Server] Connecting to MongoDB...");
-    await connectDB();
+    try {
+      await connectDB();
+      console.log("[Server] Connected to MongoDB eagerly");
+    } catch (dbError) {
+      console.error("[Server] Warning: Failed to connect to MongoDB eagerly at startup. Connection will be retried on demand.", dbError);
+    }
     
     console.log("[Server] All services initialized successfully");
   } catch (error) {
@@ -86,16 +91,23 @@ async function startServer() {
     console.log('[Server] Could not read uploads directory:', (error as Error).message);
   }
   
-  // Simple health check endpoint
+  // Simple health check endpoint (database ping is optional to prevent keep-alive timeouts)
   app.get("/health", async (req, res) => {
     try {
-      if (connectDB) {
+      const checkDb = req.query.db === "true";
+      let dbStatus = "skipped";
+      
+      if (checkDb && connectDB) {
         const db = await connectDB();
         await db.command({ ping: 1 });
+        dbStatus = "connected";
+      } else if (connectDB) {
+        dbStatus = "initialized";
       }
+
       res.status(200).json({ 
         status: "OK", 
-        database: connectDB ? "connected" : "not initialized",
+        database: dbStatus,
         uptime: process.uptime(),
         timestamp: new Date().toISOString() 
       });
