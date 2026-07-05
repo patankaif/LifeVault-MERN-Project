@@ -123,5 +123,8 @@
       "@tailwindcss/oxide",
       "esbuild"
     ]
+  },
+  "volta": {
+    "node": "20.20.2"
   }
 }

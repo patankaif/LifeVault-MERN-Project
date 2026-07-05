@@ -616,4 +616,31 @@ router.get('/maintenance/verify-media', verifyToken, async (req, res) => {
   }
 });
 
+// ==================== BACKGROUND JOBS PUBLIC TRIGGER ENDPOINTS ====================
+
+// Trigger scheduled slot deliveries (e.g. from cron-job.org)
+router.get('/jobs/send-scheduled', async (req, res) => {
+  try {
+    console.log('[API Job] Triggered sendScheduledSlots job...');
+    await vaultUtils.sendScheduledSlots();
+    res.json({ success: true, message: 'Scheduled slot check completed' });
+  } catch (error) {
+    console.error('[API Job] sendScheduledSlots job failed:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Trigger inactivity checks (e.g. from cron-job.org once a day)
+router.get('/jobs/check-inactivity', async (req, res) => {
+  try {
+    console.log('[API Job] Triggered inactivityCheck job...');
+    await inactivityUtils.checkInactivity();
+    await inactivityUtils.triggerDeathVault();
+    res.json({ success: true, message: 'Inactivity checks completed' });
+  } catch (error) {
+    console.error('[API Job] Inactivity check job failed:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default router;
