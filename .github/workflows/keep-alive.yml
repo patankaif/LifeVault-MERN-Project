@@ -1,0 +1,27 @@
+name: LifeVault Keep Alive & Scheduled Jobs
+
+on:
+  schedule:
+    # Run every 10 minutes to keep the server awake and process email deliveries
+    - cron: '*/10 * * * *'
+    # Run daily at 00:00 UTC to process inactivity checks
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  run-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Email Deliveries
+        # Run on the 10-minute schedule or manual dispatch
+        if: github.event.schedule != '0 0 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Triggering scheduled email deliveries..."
+          curl -i -s --connect-timeout 60 --max-time 120 https://lifevault-api-cmmw.onrender.com/api/jobs/send-scheduled
+
+      - name: Trigger Daily Inactivity Checks
+        # Run on the daily schedule or manual dispatch
+        if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Triggering daily inactivity checks..."
+          curl -i -s --connect-timeout 60 --max-time 120 https://lifevault-api-cmmw.onrender.com/api/jobs/check-inactivity
